@@ -2,7 +2,7 @@
 
 Spacer helps you manage your microservice dependency.
 
-# Synopsis
+## Synopsis
 
 First, create a file called `Spacerfile` with following content:
 ```
@@ -42,7 +42,7 @@ $ curl 0.0.0.0:9064/hello
 Hello World
 ```
 
-# Development
+## Development
 
 1. git clone `git clone git@github.com:poga/spacer.git`
 2. Setup Spacerfile, each line is a microservice repo on github. For example:
@@ -54,7 +54,7 @@ poga/spacer/examples/hello
 
 3. `go run *.go`
 
-# Why
+## Why
 
 We already have great tools to help us dealing with library dependencies, such as Bundler, NPM, and Cargo. However, in the world of microservices, we still have to create our own microservice infrastructure. Creating a scalable microservice infrastructure is a hard task and need a lot of experiences.
 
