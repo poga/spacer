@@ -23,26 +23,16 @@ func main() {
 	for _, l := range lines {
 		fmt.Println(l)
 
-		if len(l) == 0 {
+		s, err := NewService("services", l)
+		if err != nil {
+			fmt.Println(err)
 			continue
 		}
-
-		// git clone path
-		/*
-			dir := strings.Split(l, "/")
-			if len(dir) < 2 {
-				continue
-			}
-				url := "git@github.com:" + dir[0] + "/" + dir[1] + ".git"
-				os.Mkdir("services", 0777)
-				to := fmt.Sprintf("services/%s", dir[1])
-				output, err := exec.Command("git", "clone", url, to).CombinedOutput()
-				if err != nil {
-					log.Panic(err)
-				}
-				fmt.Println(string(output))
-		*/
-		s := NewService(l)
+		err = s.Clone()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 		services = append(services, s)
 
 		// docker-compose build && docker-compose up

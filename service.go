@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/url"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -15,22 +17,45 @@ import (
 
 type Service struct {
 	Name        string
-	Root        string
+	Path        string
 	ExposedURLs map[string]*url.URL
+	Repo        repo
 }
 
-func NewService(path string) Service {
+type repo struct {
+	username string
+	reponame string
+}
+
+func NewService(prefix string, path string) (Service, error) {
+	os.Mkdir(prefix, 0777)
+
+	if len(strings.Split(path, "/")) < 2 {
+		return Service{}, errors.New("Unknown repo format: " + path)
+	}
 	s := Service{
 		Name:        filepath.Base(path),
-		Root:        path,
+		Path:        strings.Join([]string{prefix, path}, "/"),
 		ExposedURLs: make(map[string]*url.URL),
 	}
+	username := strings.Split(path, "/")[0]
+	reponame := strings.Split(path, "/")[1]
+	s.Repo = repo{username, reponame}
 
-	return s
+	return s, nil
+}
+
+func (s Service) Clone() error {
+	url := "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
+	_, err := exec.Command("git", "clone", url, s.Path).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s Service) ConfigPath() string {
-	return s.Root + "/docker-compose.yml"
+	return s.Path + "/docker-compose.yml"
 }
 
 func (s Service) Build() ([]byte, error) {
