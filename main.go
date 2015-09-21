@@ -8,24 +8,21 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
 )
 
 func main() {
 	var services []Service
-	var exposedURLs []string
 
 	os.RemoveAll("./services")
 
 	spacerfile, _ := ioutil.ReadFile("Spacerfile.example")
 	lines := strings.Split(string(spacerfile), "\n")
 	for _, l := range lines {
-		fmt.Println(l)
-
 		s, err := NewService("services", l)
 		if err != nil {
-			fmt.Println(err)
 			continue
 		}
 		err = s.Clone()
@@ -55,9 +52,6 @@ func main() {
 		*/
 	}
 
-	fmt.Printf("%v\n", services)
-	fmt.Printf("%v\n", exposedURLs)
-
 	// setup a proxy for each service
 	for _, s := range services {
 		// TODO not just web
@@ -68,6 +62,23 @@ func main() {
 		http.HandleFunc(prefix, proxy.ServeHTTP)
 	}
 
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go func() {
+		for _ = range signalChan {
+			fmt.Println("\nReceived an interrupt, stopping services...\n")
+			for _, s := range services {
+				output, err := s.Stop()
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(string(output))
+			}
+			os.Exit(0)
+		}
+	}()
+
+	fmt.Println("\nSpacer ready, let's rock!")
 	http.ListenAndServe(":9064", nil)
 }
 
@@ -78,7 +89,6 @@ func direct(prefix string, target *url.URL) func(req *http.Request) {
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.URL.Path = regex.ReplaceAllString(singleJoiningSlash(target.Path, req.URL.Path), "")
-		fmt.Printf("redirected: %s %s %s\n", req.URL.Scheme, req.URL.Host, req.URL.Path)
 		if targetQuery == "" || req.URL.RawQuery == "" {
 			req.URL.RawQuery = targetQuery + req.URL.RawQuery
 		} else {

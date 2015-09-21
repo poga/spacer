@@ -53,7 +53,7 @@ func NewService(prefix string, path string) (Service, error) {
 
 func (s Service) Clone() error {
 	url := "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
-	fmt.Println("cloning ", url)
+	fmt.Println("Cloning", url, "into", s.LocalRepoPath(), "...")
 	_, err := exec.Command("git", "clone", url, s.LocalRepoPath()).CombinedOutput()
 	if err != nil {
 		return err
@@ -66,12 +66,12 @@ func (s Service) ConfigPath() string {
 }
 
 func (s Service) Build() ([]byte, error) {
-	fmt.Println("Building", s.ConfigPath())
+	fmt.Println("Building", s.ConfigPath(), "...")
 	return exec.Command("docker-compose", "-f", s.ConfigPath(), "build").CombinedOutput()
 }
 
 func (s Service) Start() error {
-	fmt.Println("Starting", s.ConfigPath())
+	fmt.Println("Starting", s.ConfigPath(), "...")
 	err := exec.Command("docker-compose", "-f", s.ConfigPath(), "up").Start()
 	if err != nil {
 		return err
@@ -89,7 +89,6 @@ func (s Service) Start() error {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("%v\n", m)
 
 	for serviceName, conf := range m {
 		if ports, ok := conf.(map[interface{}]interface{})["ports"]; ok {
@@ -115,17 +114,15 @@ func (s Service) Start() error {
 		}
 	}
 
-	exec.Command("docker-compose", "-f", s.ConfigPath(), "up").Start()
 	return nil
 }
 
 func (s Service) Stop() ([]byte, error) {
-	fmt.Println("Stopping", s.ConfigPath())
+	fmt.Println("Stopping", s.ConfigPath(), "...")
 	return exec.Command("docker-compose", "-f", s.ConfigPath(), "stop").CombinedOutput()
 }
 
 func (s Service) getExposedURL(serviceName string, port string) (string, error) {
-	fmt.Println("getExposedURL", serviceName, port, s.ConfigPath())
 	output, err := exec.Command("docker-compose", "-f", s.ConfigPath(), "port", serviceName, port).CombinedOutput()
 	if err != nil {
 		return "", err
