@@ -36,10 +36,10 @@ func main() {
 
 		// docker-compose build && docker-compose up
 		dcb, err := s.Build()
+		fmt.Println(string(dcb))
 		if err != nil {
 			log.Panic(err)
 		}
-		fmt.Println(string(dcb))
 
 		s.Start()
 		/*
