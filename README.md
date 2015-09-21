@@ -49,7 +49,7 @@ Hello World
     poga/spacer/examples/counter
     poga/spacer/examples/hello
     ```
-    Checkout `https://github.com/poga/spacer/tree/master/examples/counter` and `https://github.com/poga/spacer/tree/master/examples/hello` for example services.
+    Checkout ![](https://github.com/poga/spacer/tree/master/examples/counter) and ![](https://github.com/poga/spacer/tree/master/examples/hello) for example services.
 
 3. `go run *.go`
 
