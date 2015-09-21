@@ -20,11 +20,16 @@ type Service struct {
 	Path        string
 	ExposedURLs map[string]*url.URL
 	Repo        repo
+	Prefix      string
 }
 
 type repo struct {
 	username string
 	reponame string
+}
+
+func (s Service) LocalRepoPath() string {
+	return strings.Join([]string{s.Prefix, s.Repo.username, s.Repo.reponame}, "/")
 }
 
 func NewService(prefix string, path string) (Service, error) {
@@ -37,6 +42,7 @@ func NewService(prefix string, path string) (Service, error) {
 		Name:        filepath.Base(path),
 		Path:        strings.Join([]string{prefix, path}, "/"),
 		ExposedURLs: make(map[string]*url.URL),
+		Prefix:      prefix,
 	}
 	username := strings.Split(path, "/")[0]
 	reponame := strings.Split(path, "/")[1]
@@ -47,7 +53,8 @@ func NewService(prefix string, path string) (Service, error) {
 
 func (s Service) Clone() error {
 	url := "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
-	_, err := exec.Command("git", "clone", url, s.Path).CombinedOutput()
+	fmt.Println("cloning ", url)
+	_, err := exec.Command("git", "clone", url, s.LocalRepoPath()).CombinedOutput()
 	if err != nil {
 		return err
 	}

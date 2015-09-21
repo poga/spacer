@@ -30,8 +30,7 @@ func main() {
 		}
 		err = s.Clone()
 		if err != nil {
-			fmt.Println(err)
-			continue
+			log.Panic(err)
 		}
 		services = append(services, s)
 
