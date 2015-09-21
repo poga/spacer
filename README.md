@@ -55,10 +55,10 @@ Hello World
 
 ## Todo
 
-[x] Download and Boot up
-[ ] Scaling service with docker-compose
-[ ] Monitering service with ?
-[ ] Conquer the world with Docker
+- [x] Download and Boot up
+- [ ] Scaling service with docker-compose
+- [ ] Monitering service with ?
+- [ ] Conquer the world with Docker
 
 ## Why
 
