@@ -4,6 +4,13 @@ Spacer helps you manage your microservice dependency.
 
 # Synopsis
 
+First, create a file called `Spacerfile` with following content:
+```
+poga/spacer/examples/counter
+poga/spacer/examples/hello
+```
+
+Now we can boot them up and setup a reverse proxy with one command:
 ```
 $ spacer
 Cloning git@github.com:poga/spacer.git into services/poga/spacer ...
@@ -35,7 +42,7 @@ $ curl 0.0.0.0:9064/hello
 Hello World
 ```
 
-# Usage
+# Development
 
 1. git clone `git clone git@github.com:poga/spacer.git`
 2. Setup Spacerfile, each line is a microservice repo on github. For example:
@@ -43,6 +50,8 @@ Hello World
 poga/spacer/examples/counter
 poga/spacer/examples/hello
 ```
+   Checkout `https://github.com/poga/spacer/tree/master/examples/counter` and `https://github.com/poga/spacer/tree/master/examples/hello` for example services.
+
 3. `go run *.go`
 
 # Why
