@@ -81,7 +81,7 @@ func main() {
 		}
 	}()
 
-	fmt.Println("\nspacer ready and rocking at 0.0.0.0:9064")
+	fmt.Println("\nSpacer is ready and rocking at 0.0.0.0:9064")
 	http.ListenAndServe(":9064", nil)
 }
 
