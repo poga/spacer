@@ -18,7 +18,7 @@ func main() {
 
 	os.RemoveAll("./services")
 
-	spacerfile, _ := ioutil.ReadFile("Spacerfile.example")
+	spacerfile, _ := ioutil.ReadFile("Spacerfile")
 	lines := strings.Split(string(spacerfile), "\n")
 	for _, l := range lines {
 		s, err := NewService("services", l)
