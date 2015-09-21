@@ -18,7 +18,10 @@ func main() {
 
 	os.RemoveAll("./services")
 
-	spacerfile, _ := ioutil.ReadFile("Spacerfile")
+	spacerfile, err := ioutil.ReadFile("Spacerfile")
+	if err != nil {
+		log.Fatal(err)
+	}
 	lines := strings.Split(string(spacerfile), "\n")
 	for _, l := range lines {
 		s, err := NewService("services", l)
@@ -26,7 +29,7 @@ func main() {
 			continue
 		}
 		err = s.Clone()
-		if err != nil {
+		if err != nil && err != ErrLocalPathAlreadyExists {
 			log.Panic(err)
 		}
 		services = append(services, s)
