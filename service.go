@@ -110,6 +110,7 @@ func (s Service) Start() error {
 				innerPort = portValue
 			}
 			output, err := s.getExposedURL(serviceName, innerPort)
+			fmt.Println(output)
 			if err != nil {
 				log.Panic(err)
 			}

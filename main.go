@@ -16,8 +16,6 @@ import (
 func main() {
 	var services []Service
 
-	os.RemoveAll("./services")
-
 	spacerfile, err := ioutil.ReadFile("Spacerfile")
 	if err != nil {
 		log.Fatal(err)
@@ -29,8 +27,12 @@ func main() {
 			continue
 		}
 		err = s.Clone()
-		if err != nil && err != ErrLocalPathAlreadyExists {
-			log.Panic(err)
+		if err != nil {
+			if err != ErrLocalPathAlreadyExists {
+				log.Panic(err)
+			} else {
+				fmt.Println("Service already exists: " + s.LocalRepoPath())
+			}
 		}
 		services = append(services, s)
 
@@ -42,17 +44,6 @@ func main() {
 		}
 
 		s.Start()
-		/*
-
-			time.Sleep(3 * time.Second)
-
-			dcs, err := s.Stop()
-			if err != nil {
-				log.Panic(err)
-			}
-			fmt.Println(string(dcs))
-
-		*/
 	}
 
 	// setup a proxy for each service
