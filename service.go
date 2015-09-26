@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -52,6 +55,13 @@ func NewService(prefix string, path string) (Service, error) {
 }
 
 var ErrLocalPathAlreadyExists = errors.New("local path already exists")
+
+func (s Service) ReverseProxy(composeName string) (string, *httputil.ReverseProxy) {
+	prefix := "/" + s.Name
+	proxy := httputil.NewSingleHostReverseProxy(s.ExposedURLs[composeName])
+	proxy.Director = direct(prefix, s.ExposedURLs[composeName])
+	return prefix, proxy
+}
 
 func (s Service) Clone() error {
 	url := "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
@@ -136,4 +146,31 @@ func (s Service) getExposedURL(serviceName string, port string) (string, error) 
 		return "", err
 	}
 	return strings.Trim(string(output), "\n"), nil
+}
+
+func direct(prefix string, target *url.URL) func(req *http.Request) {
+	regex := regexp.MustCompile(`^` + prefix)
+	return func(req *http.Request) {
+		targetQuery := target.RawQuery
+		req.URL.Scheme = target.Scheme
+		req.URL.Host = target.Host
+		req.URL.Path = regex.ReplaceAllString(singleJoiningSlash(target.Path, req.URL.Path), "")
+		if targetQuery == "" || req.URL.RawQuery == "" {
+			req.URL.RawQuery = targetQuery + req.URL.RawQuery
+		} else {
+			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
+		}
+	}
+}
+
+func singleJoiningSlash(a, b string) string {
+	aslash := strings.HasSuffix(a, "/")
+	bslash := strings.HasPrefix(b, "/")
+	switch {
+	case aslash && bslash:
+		return a + b[1:]
+	case !aslash && !bslash:
+		return a + "/" + b
+	}
+	return a + b
 }

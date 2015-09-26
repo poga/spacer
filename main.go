@@ -5,11 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 )
 
@@ -49,10 +46,7 @@ func main() {
 	// setup a proxy for each service
 	for _, s := range services {
 		// TODO not just web
-		prefix := "/" + s.Name
-		fmt.Printf("Proxying %s to %s\n", prefix, s.ExposedURLs["web"])
-		proxy := httputil.NewSingleHostReverseProxy(s.ExposedURLs["web"])
-		proxy.Director = direct(prefix, s.ExposedURLs["web"])
+		prefix, proxy := s.ReverseProxy("web")
 		http.HandleFunc(prefix, proxy.ServeHTTP)
 	}
 
@@ -74,31 +68,4 @@ func main() {
 
 	fmt.Println("\nSpacer is ready and rocking at 0.0.0.0:9064")
 	http.ListenAndServe(":9064", nil)
-}
-
-func direct(prefix string, target *url.URL) func(req *http.Request) {
-	regex := regexp.MustCompile(`^` + prefix)
-	return func(req *http.Request) {
-		targetQuery := target.RawQuery
-		req.URL.Scheme = target.Scheme
-		req.URL.Host = target.Host
-		req.URL.Path = regex.ReplaceAllString(singleJoiningSlash(target.Path, req.URL.Path), "")
-		if targetQuery == "" || req.URL.RawQuery == "" {
-			req.URL.RawQuery = targetQuery + req.URL.RawQuery
-		} else {
-			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
-		}
-	}
-}
-
-func singleJoiningSlash(a, b string) string {
-	aslash := strings.HasSuffix(a, "/")
-	bslash := strings.HasPrefix(b, "/")
-	switch {
-	case aslash && bslash:
-		return a + b[1:]
-	case !aslash && !bslash:
-		return a + "/" + b
-	}
-	return a + b
 }
