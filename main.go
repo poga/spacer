@@ -54,7 +54,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt)
 	go func() {
 		for _ = range signalChan {
-			fmt.Println("\nReceived an interrupt, stopping services...\n")
+			fmt.Println("\nReceived an interrupt, stopping services...")
 			for _, s := range services {
 				output, err := s.Stop()
 				if err != nil {
