@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -17,6 +18,7 @@ func NewProxy(s Service, composeName string) (string, *httputil.ReverseProxy) {
 
 func direct(prefix string, target *url.URL) func(req *http.Request) {
 	regex := regexp.MustCompile(`^` + prefix)
+	fmt.Printf("Proxying %s to %s\n", prefix, target)
 	return func(req *http.Request) {
 		targetQuery := target.RawQuery
 		req.URL.Scheme = target.Scheme

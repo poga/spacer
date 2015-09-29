@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -134,7 +133,6 @@ func (s Service) Start() error {
 				innerPort = portValue
 			}
 			urlStr, err := s.getExposedURLString(serviceName, innerPort)
-			// fmt.Println(output)
 			if err != nil {
 				log.Panic(err)
 			}
@@ -149,7 +147,6 @@ func (s Service) Start() error {
 				}
 				u.Host = s.RunInfo.Host + ":" + originPort
 			}
-			fmt.Println(u.Host)
 			s.ExposedURLs[serviceName] = u
 		}
 	}
