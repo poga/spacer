@@ -23,6 +23,7 @@ func main() {
 		if err != nil {
 			continue
 		}
+		fmt.Println("Cloning", s.RepoCloneURL(), "into", s.LocalRepoPath(), "...")
 		err = s.Clone()
 		if err != nil {
 			if err != ErrLocalPathAlreadyExists {
@@ -34,19 +35,20 @@ func main() {
 		services = append(services, s)
 
 		// docker-compose build && docker-compose up
-		dcb, err := s.Build()
-		fmt.Println(string(dcb))
+		fmt.Println("Building", s.ConfigPath(), "...")
+		_, err = s.Build()
 		if err != nil {
 			log.Panic(err)
 		}
 
+		fmt.Println("Starting", s.ConfigPath(), "...")
 		s.Start()
 	}
 
 	// setup a proxy for each service
 	for _, s := range services {
 		// TODO not just web
-		prefix, proxy := s.ReverseProxy("web")
+		prefix, proxy := NewProxy(s, "web")
 		http.HandleFunc(prefix, proxy.ServeHTTP)
 	}
 
@@ -56,6 +58,7 @@ func main() {
 		for _ = range signalChan {
 			fmt.Println("\nReceived an interrupt, stopping services...")
 			for _, s := range services {
+				fmt.Println("Stopping", s.ConfigPath(), "...")
 				output, err := s.Stop()
 				if err != nil {
 					fmt.Println(err)

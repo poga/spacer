@@ -2,16 +2,12 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -56,17 +52,8 @@ func NewService(prefix string, path string) (Service, error) {
 
 var ErrLocalPathAlreadyExists = errors.New("local path already exists")
 
-func (s Service) ReverseProxy(composeName string) (string, *httputil.ReverseProxy) {
-	prefix := "/" + s.Name
-	proxy := httputil.NewSingleHostReverseProxy(s.ExposedURLs[composeName])
-	proxy.Director = direct(prefix, s.ExposedURLs[composeName])
-	return prefix, proxy
-}
-
 func (s Service) Clone() error {
-	url := "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
-	fmt.Println("Cloning", url, "into", s.LocalRepoPath(), "...")
-	output, err := exec.Command("git", "clone", url, s.LocalRepoPath()).CombinedOutput()
+	output, err := exec.Command("git", "clone", s.RepoCloneURL(), s.LocalRepoPath()).CombinedOutput()
 	if err != nil {
 		if strings.Contains(string(output), "already exists and is not an empty directory") {
 			return ErrLocalPathAlreadyExists
@@ -78,17 +65,19 @@ func (s Service) Clone() error {
 	return nil
 }
 
+func (s Service) RepoCloneURL() string {
+	return "git@github.com:" + s.Repo.username + "/" + s.Repo.reponame + ".git"
+}
+
 func (s Service) ConfigPath() string {
 	return s.Path + "/docker-compose.yml"
 }
 
 func (s Service) Build() ([]byte, error) {
-	fmt.Println("Building", s.ConfigPath(), "...")
 	return exec.Command("docker-compose", "-f", s.ConfigPath(), "build").CombinedOutput()
 }
 
 func (s Service) Start() error {
-	fmt.Println("Starting", s.ConfigPath(), "...")
 	err := exec.Command("docker-compose", "-f", s.ConfigPath(), "up").Start()
 	if err != nil {
 		return err
@@ -120,7 +109,7 @@ func (s Service) Start() error {
 				innerPort = portValue
 			}
 			output, err := s.getExposedURL(serviceName, innerPort)
-			fmt.Println(output)
+			// fmt.Println(output)
 			if err != nil {
 				log.Panic(err)
 			}
@@ -136,7 +125,6 @@ func (s Service) Start() error {
 }
 
 func (s Service) Stop() ([]byte, error) {
-	fmt.Println("Stopping", s.ConfigPath(), "...")
 	return exec.Command("docker-compose", "-f", s.ConfigPath(), "stop").CombinedOutput()
 }
 
@@ -146,31 +134,4 @@ func (s Service) getExposedURL(serviceName string, port string) (string, error) 
 		return "", err
 	}
 	return strings.Trim(string(output), "\n"), nil
-}
-
-func direct(prefix string, target *url.URL) func(req *http.Request) {
-	regex := regexp.MustCompile(`^` + prefix)
-	return func(req *http.Request) {
-		targetQuery := target.RawQuery
-		req.URL.Scheme = target.Scheme
-		req.URL.Host = target.Host
-		req.URL.Path = regex.ReplaceAllString(singleJoiningSlash(target.Path, req.URL.Path), "")
-		if targetQuery == "" || req.URL.RawQuery == "" {
-			req.URL.RawQuery = targetQuery + req.URL.RawQuery
-		} else {
-			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
-		}
-	}
-}
-
-func singleJoiningSlash(a, b string) string {
-	aslash := strings.HasSuffix(a, "/")
-	bslash := strings.HasPrefix(b, "/")
-	switch {
-	case aslash && bslash:
-		return a + b[1:]
-	case !aslash && !bslash:
-		return a + "/" + b
-	}
-	return a + b
 }
