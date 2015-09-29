@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	dockerHost := os.Getenv("DOCKER_HOST")
+	fmt.Println(dockerHost)
 	var services []Service
 
 	spacerfile, err := ioutil.ReadFile("Spacerfile")
@@ -19,8 +21,9 @@ func main() {
 	}
 	lines := strings.Split(string(spacerfile), "\n")
 	for _, l := range lines {
-		s, err := NewService("services", l)
+		s, err := NewService("services", l, dockerHost)
 		if err != nil {
+			fmt.Println(err)
 			continue
 		}
 		fmt.Println("Cloning", s.RepoCloneURL(), "into", s.LocalRepoPath(), "...")

@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/url"
 	"os"
 	"os/exec"
@@ -20,6 +22,7 @@ type Service struct {
 	ExposedURLs map[string]*url.URL
 	Repo        repo
 	Prefix      string
+	RunInfo     runInfo
 }
 
 type repo struct {
@@ -27,12 +30,31 @@ type repo struct {
 	reponame string
 }
 
+type runInfo struct {
+	Host string
+}
+
 func (s Service) LocalRepoPath() string {
 	return strings.Join([]string{s.Prefix, s.Repo.username, s.Repo.reponame}, "/")
 }
 
-func NewService(prefix string, path string) (Service, error) {
+func NewService(prefix string, path string, dockerHost string) (Service, error) {
 	os.Mkdir(prefix, 0777)
+
+	var host string
+	if dockerHost != "" {
+		var err error
+		dockerHostURL, err := url.Parse(dockerHost)
+		if err != nil {
+			log.Panic(err)
+		}
+		host, _, err = net.SplitHostPort(dockerHostURL.Host)
+		if err != nil {
+			log.Panic(err)
+		}
+	} else {
+		host = ""
+	}
 
 	if len(strings.Split(path, "/")) < 2 {
 		return Service{}, errors.New("Unknown repo format: " + path)
@@ -42,6 +64,9 @@ func NewService(prefix string, path string) (Service, error) {
 		Path:        strings.Join([]string{prefix, path}, "/"),
 		ExposedURLs: make(map[string]*url.URL),
 		Prefix:      prefix,
+		RunInfo: runInfo{
+			Host: host,
+		},
 	}
 	username := strings.Split(path, "/")[0]
 	reponame := strings.Split(path, "/")[1]
@@ -108,15 +133,23 @@ func (s Service) Start() error {
 			} else {
 				innerPort = portValue
 			}
-			output, err := s.getExposedURL(serviceName, innerPort)
+			urlStr, err := s.getExposedURLString(serviceName, innerPort)
 			// fmt.Println(output)
 			if err != nil {
 				log.Panic(err)
 			}
-			u, err := url.Parse("http://" + output)
+			u, err := url.Parse("http://" + urlStr)
 			if err != nil {
 				log.Panic(err)
 			}
+			if s.RunInfo.Host != "" {
+				_, originPort, err := net.SplitHostPort(u.Host)
+				if err != nil {
+					return err
+				}
+				u.Host = s.RunInfo.Host + ":" + originPort
+			}
+			fmt.Println(u.Host)
 			s.ExposedURLs[serviceName] = u
 		}
 	}
@@ -128,7 +161,7 @@ func (s Service) Stop() ([]byte, error) {
 	return exec.Command("docker-compose", "-f", s.ConfigPath(), "stop").CombinedOutput()
 }
 
-func (s Service) getExposedURL(serviceName string, port string) (string, error) {
+func (s Service) getExposedURLString(serviceName string, port string) (string, error) {
 	output, err := exec.Command("docker-compose", "-f", s.ConfigPath(), "port", serviceName, port).CombinedOutput()
 	if err != nil {
 		return "", err
