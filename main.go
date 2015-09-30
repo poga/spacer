@@ -67,8 +67,8 @@ func main() {
 				output, err := s.Stop()
 				if err != nil {
 					fmt.Println(err)
+					fmt.Println(string(output))
 				}
-				fmt.Println(string(output))
 			}
 			os.Exit(0)
 		}
