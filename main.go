@@ -41,13 +41,13 @@ func main() {
 		services = append(services, s)
 
 		// docker-compose build && docker-compose up
-		fmt.Println("\tBuilding", platform.configPath(s), "...")
+		fmt.Println("\tBuilding", platform.ConfigPath(s), "...")
 		err = platform.Build(s)
 		if err != nil {
 			log.Panic(err)
 		}
 
-		fmt.Println("\tStarting", platform.configPath(s), "...")
+		fmt.Println("\tStarting", platform.ConfigPath(s), "...")
 		platform.Start(s)
 	}
 

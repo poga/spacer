@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -10,17 +9,21 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v1"
+	"gopkg.in/yaml.v2"
 )
 
 type Platform interface {
+	Build(Service) error
+	Start(Service) error
+	Stop(Service) error
+	ConfigPath(Service) string
 }
 
 type DockerCompose struct {
 	Host string
 }
 
-func NewDockerCompose(dockerHost string) DockerCompose {
+func NewDockerCompose(dockerHost string) Platform {
 	var host string
 	if dockerHost != "" {
 		var err error
@@ -40,17 +43,17 @@ func NewDockerCompose(dockerHost string) DockerCompose {
 }
 
 func (p DockerCompose) Build(s Service) error {
-	_, err := exec.Command("docker-compose", "-f", p.configPath(s), "build").CombinedOutput()
+	_, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "build").CombinedOutput()
 	return err
 }
 
 func (p DockerCompose) Stop(s Service) error {
-	_, err := exec.Command("docker-compose", "-f", p.configPath(s), "stop").CombinedOutput()
+	_, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "stop").CombinedOutput()
 	return err
 }
 
 func (p DockerCompose) Start(s Service) error {
-	err := exec.Command("docker-compose", "-f", p.configPath(s), "up").Start()
+	err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "up").Start()
 	if err != nil {
 		return err
 	}
@@ -58,7 +61,7 @@ func (p DockerCompose) Start(s Service) error {
 	time.Sleep(5 * time.Second)
 
 	// loop through docker-compose.yml and look for exposed ip, save it
-	ymlBytes, err := ioutil.ReadFile(p.configPath(s))
+	ymlBytes, err := ioutil.ReadFile(p.ConfigPath(s))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -104,15 +107,13 @@ func (p DockerCompose) Start(s Service) error {
 }
 
 func (p DockerCompose) getExposedURLString(s Service, serviceName string, port string) (string, error) {
-	fmt.Println(p.configPath(s), "port", serviceName, port)
-	output, err := exec.Command("docker-compose", "-f", p.configPath(s), "port", serviceName, port).CombinedOutput()
-	fmt.Println(string(output))
+	output, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "port", serviceName, port).CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 	return strings.Trim(string(output), "\n"), nil
 }
 
-func (p DockerCompose) configPath(s Service) string {
+func (p DockerCompose) ConfigPath(s Service) string {
 	return s.Path + "/docker-compose.yml"
 }
