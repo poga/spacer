@@ -12,6 +12,7 @@ import (
 
 func main() {
 	dockerHost := os.Getenv("DOCKER_HOST")
+	platform := NewDockerCompose(dockerHost)
 	var services []Service
 
 	spacerfile, err := ioutil.ReadFile("Spacerfile")
@@ -23,7 +24,7 @@ func main() {
 		if l == "" {
 			continue
 		}
-		s, err := NewService("services", l, dockerHost)
+		s, err := NewService("services", l)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -40,14 +41,14 @@ func main() {
 		services = append(services, s)
 
 		// docker-compose build && docker-compose up
-		fmt.Println("\tBuilding", s.ConfigPath(), "...")
-		_, err = s.Build()
+		fmt.Println("\tBuilding", platform.configPath(s), "...")
+		err = platform.Build(s)
 		if err != nil {
 			log.Panic(err)
 		}
 
-		fmt.Println("\tStarting", s.ConfigPath(), "...")
-		s.Start()
+		fmt.Println("\tStarting", platform.configPath(s), "...")
+		platform.Start(s)
 	}
 
 	// setup a proxy for each service
@@ -64,10 +65,9 @@ func main() {
 			fmt.Println("Stopping services...")
 			for _, s := range services {
 				fmt.Println("\tStopping", s.Name, "...")
-				output, err := s.Stop()
+				platform.Stop(s)
 				if err != nil {
 					fmt.Println(err)
-					fmt.Println(string(output))
 				}
 			}
 			os.Exit(0)
