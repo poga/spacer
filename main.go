@@ -8,10 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 func main() {
-	dockerHost := os.Getenv("DOCKER_HOST")
+	dockerHost := viper.GetString("DOCKER_HOST")
 	platform := NewDockerCompose(dockerHost)
 	var services []Service
 
@@ -76,4 +78,8 @@ func main() {
 
 	fmt.Println("Spacer is ready and rocking at 0.0.0.0:9064")
 	http.ListenAndServe(":9064", nil)
+}
+
+func init() {
+	viper.AutomaticEnv()
 }
