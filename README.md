@@ -4,22 +4,15 @@ Spacer helps you manage your microservice dependencies.
 
 ## Synopsis
 
-First, create a file called `Spacerfile` with the following content:
+First, create a file called `spacer.toml` with the following content:
 ```
-poga/spacer/examples/counter
-poga/spacer/examples/hello
+[[Service]]
+repo = "poga/spacer/examples/hello"
 ```
 
 Now we can boot them up and setup a easy-to-use proxy with one command:
 ```
 $ spacer
-Cloning git@github.com:poga/spacer.git into services/poga/spacer ...
-Building services/poga/spacer/examples/counter/docker-compose.yml ...
-...
-...
-Successfully built c90b052fff60
-
-Starting services/poga/spacer/examples/counter/docker-compose.yml ...
 Cloning git@github.com:poga/spacer.git into services/poga/spacer ...
 Building services/poga/spacer/examples/hello/docker-compose.yml ...
 ...
@@ -27,15 +20,9 @@ Building services/poga/spacer/examples/hello/docker-compose.yml ...
 Successfully built 2f880daf95fc
 
 Starting services/poga/spacer/examples/hello/docker-compose.yml ...
-Proxying /counter to http://0.0.0.0:5000
 Proxying /hello to http://0.0.0.0:32770
 
 Spacer is ready and rocking at 0.0.0.0:9064
-
-$ curl 0.0.0.0:9064/counter
-{
-  "result": "41"
-}
 
 $ curl 0.0.0.0:9064/hello
 Hello World
