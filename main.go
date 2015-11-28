@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	InitEtcd()
+
 	dockerHost := viper.GetString("DOCKER_HOST")
 	platform := NewDockerCompose(dockerHost)
 	var services []Service
@@ -50,7 +52,7 @@ func main() {
 	// setup a proxy for each service
 	for _, s := range services {
 		// TODO not just web
-		prefix, proxy := NewProxy(s, "web")
+		prefix, proxy := NewProxy(s)
 		http.HandleFunc(prefix, proxy.ServeHTTP)
 	}
 
