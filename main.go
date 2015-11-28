@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -17,12 +15,8 @@ func main() {
 	platform := NewDockerCompose(dockerHost)
 	var services []Service
 
-	spacerfile, err := ioutil.ReadFile("Spacerfile")
-	if err != nil {
-		log.Fatal(err)
-	}
-	lines := strings.Split(string(spacerfile), "\n")
-	for _, l := range lines {
+	for _, dep := range GetDeps() {
+		l := dep.Repo
 		if l == "" {
 			continue
 		}
@@ -68,9 +62,6 @@ func main() {
 			for _, s := range services {
 				fmt.Println("\tStopping", s.Name, "...")
 				platform.Stop(s)
-				if err != nil {
-					fmt.Println(err)
-				}
 			}
 			os.Exit(0)
 		}
@@ -78,8 +69,4 @@ func main() {
 
 	fmt.Println("Spacer is ready and rocking at 0.0.0.0:9064")
 	http.ListenAndServe(":9064", nil)
-}
-
-func init() {
-	viper.AutomaticEnv()
 }
