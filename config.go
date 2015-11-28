@@ -2,6 +2,8 @@ package main
 
 import "github.com/spf13/viper"
 
+const CONFIG_SERVICE_KEY = "service"
+
 func init() {
 	viper.AutomaticEnv()
 	viper.SetConfigType("toml")
@@ -19,7 +21,7 @@ type Dep struct {
 
 func GetDeps() []Dep {
 	var result []Dep
-	for _, m := range viper.Get("dep").([]map[string]interface{}) {
+	for _, m := range viper.Get(CONFIG_SERVICE_KEY).([]map[string]interface{}) {
 		result = append(result, Dep{m["repo"].(string)})
 	}
 	return result
