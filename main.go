@@ -11,8 +11,6 @@ import (
 )
 
 func main() {
-	InitEtcd()
-
 	dockerHost := viper.GetString("DOCKER_HOST")
 	platform := NewDockerCompose(dockerHost)
 	var services []Service

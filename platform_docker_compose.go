@@ -92,7 +92,6 @@ func (p DockerCompose) Start(s Service) error {
 				u.Host = p.Host + ":" + originPort
 			}
 			s.ExposedURLs[serviceName] = u
-			AddToEtcd(s)
 		}
 	}
 
