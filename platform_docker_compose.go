@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -36,7 +37,10 @@ func NewDockerCompose(dockerHost string) Platform {
 }
 
 func (p DockerCompose) Build(s Service) error {
-	_, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "build").CombinedOutput()
+	o, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "build").CombinedOutput()
+	if err != nil {
+		fmt.Println(string(o))
+	}
 	return err
 }
 
