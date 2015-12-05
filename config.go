@@ -9,6 +9,9 @@ func init() {
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("spacer")
+
+	viper.SetDefault("listen", ":9064")
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

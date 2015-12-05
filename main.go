@@ -67,6 +67,6 @@ func main() {
 		}
 	}()
 
-	fmt.Println("Spacer is ready and rocking at 0.0.0.0:9064")
-	http.ListenAndServe(":9064", nil)
+	fmt.Println("Spacer is ready and rocking at " + viper.GetString("listen"))
+	http.ListenAndServe(viper.GetString("listen"), nil)
 }
