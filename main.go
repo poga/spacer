@@ -38,8 +38,9 @@ func main() {
 
 		// docker-compose build && docker-compose up
 		fmt.Println("\tBuilding", platform.ConfigPath(s), "...")
-		err = platform.Build(s)
+		out, err := platform.Build(s)
 		if err != nil {
+			fmt.Println(string(out))
 			log.Panic(err)
 		}
 

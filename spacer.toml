@@ -1,2 +1,4 @@
+verbose = true
+
 [[Service]]
 repo = "poga/spacer/examples/hello"

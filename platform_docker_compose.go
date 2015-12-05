@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -36,17 +35,12 @@ func NewDockerCompose(dockerHost string) Platform {
 	return DockerCompose{host}
 }
 
-func (p DockerCompose) Build(s Service) error {
-	o, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "build").CombinedOutput()
-	if err != nil {
-		fmt.Println(string(o))
-	}
-	return err
+func (p DockerCompose) Build(s Service) ([]byte, error) {
+	return Exec("docker-compose", "-f", p.ConfigPath(s), "build")
 }
 
-func (p DockerCompose) Stop(s Service) error {
-	_, err := exec.Command("docker-compose", "-f", p.ConfigPath(s), "stop").CombinedOutput()
-	return err
+func (p DockerCompose) Stop(s Service) ([]byte, error) {
+	return Exec("docker-compose", "-f", p.ConfigPath(s), "stop")
 }
 
 func (p DockerCompose) Start(s Service) error {
