@@ -48,7 +48,7 @@ func NewService(prefix string, path string) (Service, error) {
 var ErrLocalPathAlreadyExists = errors.New("local path already exists")
 
 func (s Service) Clone() error {
-	output, err := exec.Command("git", "clone", s.RepoCloneURL(), s.LocalRepoPath()).CombinedOutput()
+	output, err := exec.Command("git", "clone", "--depth=1", s.RepoCloneURL(), s.LocalRepoPath()).CombinedOutput()
 	if err != nil {
 		if strings.Contains(string(output), "already exists and is not an empty directory") {
 			return ErrLocalPathAlreadyExists

@@ -1,4 +1,4 @@
 verbose = true
 
-[[Service]]
+[[dependency]]
 repo = "poga/spacer/examples/hello"

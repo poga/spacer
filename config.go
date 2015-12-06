@@ -2,7 +2,7 @@ package main
 
 import "github.com/spf13/viper"
 
-const CONFIG_SERVICE_KEY = "service"
+const CONFIG_SERVICE_KEY = "dependency"
 
 func init() {
 	viper.AutomaticEnv()
