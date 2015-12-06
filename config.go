@@ -5,6 +5,7 @@ import "github.com/spf13/viper"
 const CONFIG_SERVICE_KEY = "service"
 
 func init() {
+	viper.AutomaticEnv()
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("spacer")
