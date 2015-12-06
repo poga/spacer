@@ -2,7 +2,7 @@ package main
 
 import (
 	"path/filepath"
-	"strings"
+	"regexp"
 
 	"github.com/spf13/viper"
 )
@@ -37,16 +37,17 @@ func getDependencies() []Service {
 				Name:      filepath.Base(localPath),
 				Path:      viper.GetString("prefix") + "/",
 			})
-			break
+			continue
 		}
-		if v, ok := serviceConfig["github"]; ok {
+		if v, ok := serviceConfig["git"]; ok {
 			remotePath := v.(string)
+			name := regexp.MustCompile(":(.+)/(.+).git").FindStringSubmatch(remotePath)[2]
 			deps = append(deps, Service{
 				RemotePath: remotePath,
-				Name:       strings.Split(remotePath, "/")[1],
+				Name:       name,
 				Path:       viper.GetString("prefix") + "/",
 			})
-			break
+			continue
 		}
 	}
 	return deps

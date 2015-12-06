@@ -18,7 +18,7 @@ func main() {
 
 	for _, dep := range deps {
 		fmt.Println("Initializing", dep.Name)
-		fmt.Println("\tCloning", dep.LocalPath, "...")
+		fmt.Println("\tCloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
 		out, err := dep.Fetch()
 		if err != nil {
 			if err != ErrLocalPathAlreadyExists {

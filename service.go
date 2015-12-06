@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
-	"strings"
 )
 
 type Service struct {
@@ -22,22 +20,18 @@ type Service struct {
 var ErrLocalPathAlreadyExists = errors.New("local path already exists")
 
 func (s *Service) Fetch() ([]byte, error) {
-	var output []byte
-	var err error
-
 	os.MkdirAll(s.Path, os.ModePerm)
-	fmt.Println(s.LocalPath, "->", s.Path)
+	fmt.Println(s.LocalPath, s.RemotePath, "->", s.Path)
+
+	if _, err := os.Stat(s.Path); os.IsNotExist(err) {
+		return nil, ErrLocalPathAlreadyExists
+	}
 
 	if s.RemotePath != "" {
-		output, err = Exec("git", "clone", "--depth=1", s.RemotePath, s.Path)
-		if err != nil {
-			log.Println(string(output))
-			if strings.Contains(string(output), "already exists and is not an empty directory") {
-				return output, ErrLocalPathAlreadyExists
-			}
-		}
+		return Exec("git", "clone", "--depth=1", s.RemotePath, s.Path+s.Name)
 	} else if s.LocalPath != "" {
-		output, err = Exec("cp", "-r", s.LocalPath, s.Path)
+		return Exec("cp", "-r", s.LocalPath, s.Path)
 	}
-	return output, err
+
+	return nil, errors.New("Unknown dependency format " + s.Name)
 }
