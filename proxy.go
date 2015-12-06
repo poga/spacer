@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-func NewProxy(s Service) (string, *httputil.ReverseProxy) {
-	prefix := "/" + s.Name
-	proxy := httputil.NewSingleHostReverseProxy(s.ExposedURLs["web"])
-	proxy.Director = direct(prefix, s.ExposedURLs["web"])
+func NewProxy(serviceName string, exposeURL *url.URL) (string, *httputil.ReverseProxy) {
+	prefix := "/" + serviceName
+	proxy := httputil.NewSingleHostReverseProxy(exposeURL)
+	proxy.Director = direct(prefix, exposeURL)
 	return prefix, proxy
 }
 

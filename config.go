@@ -1,8 +1,12 @@
 package main
 
-import "github.com/spf13/viper"
+import (
+	"path/filepath"
 
-const CONFIG_SERVICE_KEY = "dependency"
+	"github.com/spf13/viper"
+)
+
+const CONFIG_DEPENDENCY_KEY = "dependency"
 
 func init() {
 	viper.AutomaticEnv()
@@ -12,6 +16,7 @@ func init() {
 
 	viper.SetDefault("listen", ":9064")
 	viper.SetDefault("verbose", false)
+	viper.SetDefault("prefix", "_services")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -19,14 +24,17 @@ func init() {
 	}
 }
 
-type Dep struct {
-	Repo string
-}
+func getDependencies() []Service {
+	var deps []Service
 
-func GetDeps() []Dep {
-	var result []Dep
-	for _, m := range viper.Get(CONFIG_SERVICE_KEY).([]map[string]interface{}) {
-		result = append(result, Dep{m["repo"].(string)})
+	for _, serviceConfig := range viper.Get(CONFIG_DEPENDENCY_KEY).([]map[string]interface{}) {
+		if v, ok := serviceConfig["local"]; ok {
+			localPath := v.(string)
+			deps = append(deps, Service{LocalPath: localPath,
+				Name: filepath.Base(localPath),
+				Path: viper.GetString("prefix") + "/",
+			})
+		}
 	}
-	return result
+	return deps
 }

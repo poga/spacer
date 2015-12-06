@@ -14,9 +14,11 @@ import (
 
 type DockerCompose struct {
 	Host string
+
+	running map[string]*url.URL
 }
 
-func NewDockerCompose(dockerHost string) Platform {
+func NewDockerCompose(dockerHost string, prefix string) Platform {
 	var host string
 	if dockerHost != "" {
 		var err error
@@ -32,7 +34,11 @@ func NewDockerCompose(dockerHost string) Platform {
 		host = ""
 	}
 
-	return DockerCompose{host}
+	return DockerCompose{host, make(map[string]*url.URL)}
+}
+
+func (p DockerCompose) Running() map[string]*url.URL {
+	return p.running
 }
 
 func (p DockerCompose) Build(s Service) ([]byte, error) {
@@ -89,7 +95,7 @@ func (p DockerCompose) Start(s Service) error {
 				}
 				u.Host = p.Host + ":" + originPort
 			}
-			s.ExposedURLs[serviceName] = u
+			p.running[s.Name] = u
 		}
 	}
 
@@ -106,5 +112,5 @@ func (p DockerCompose) getExposedURLString(s Service, serviceName string, port s
 }
 
 func (p DockerCompose) ConfigPath(s Service) string {
-	return s.Path + "/docker-compose.yml"
+	return s.Path + s.Name + "/docker-compose.yml"
 }

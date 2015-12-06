@@ -1,4 +1,4 @@
 verbose = true
 
 [[dependency]]
-repo = "poga/spacer/examples/hello"
+local = "examples/hello"

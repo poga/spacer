@@ -12,46 +12,35 @@ import (
 
 func main() {
 	dockerHost := viper.GetString("DOCKER_HOST")
-	platform := NewDockerCompose(dockerHost)
-	var services []Service
+	prefix := viper.GetString("prefix")
+	platform := NewDockerCompose(dockerHost, prefix)
+	deps := getDependencies()
 
-	for _, dep := range GetDeps() {
-		l := dep.Repo
-		if l == "" {
-			continue
-		}
-		s, err := NewService("services", l)
-		if err != nil {
-			log.Panic(err)
-		}
-		fmt.Println("Initializing", s.Name)
-		fmt.Println("\tCloning", s.RepoCloneURL(), "into", s.LocalRepoPath(), "...")
-		err = s.Clone()
+	for _, dep := range deps {
+		fmt.Println("Initializing", dep.Name)
+		fmt.Println("\tCloning", dep.LocalPath, "...")
+		out, err := dep.Fetch()
 		if err != nil {
 			if err != ErrLocalPathAlreadyExists {
 				log.Panic(err)
-			} else {
-				fmt.Println("\tService already exists: " + s.LocalRepoPath())
 			}
 		}
-		services = append(services, s)
 
 		// docker-compose build && docker-compose up
-		fmt.Println("\tBuilding", platform.ConfigPath(s), "...")
-		out, err := platform.Build(s)
+		fmt.Println("\tBuilding", platform.ConfigPath(dep), "...")
+		out, err = platform.Build(dep)
 		if err != nil {
 			fmt.Println(string(out))
 			log.Panic(err)
 		}
 
-		fmt.Println("\tStarting", platform.ConfigPath(s), "...")
-		platform.Start(s)
+		fmt.Println("\tStarting", platform.ConfigPath(dep), "...")
+		platform.Start(dep)
 	}
 
 	// setup a proxy for each service
-	for _, s := range services {
-		// TODO not just web
-		prefix, proxy := NewProxy(s)
+	for serviceName, exposeURL := range platform.Running() {
+		prefix, proxy := NewProxy(serviceName, exposeURL)
 		http.HandleFunc(prefix, proxy.ServeHTTP)
 	}
 
@@ -60,9 +49,9 @@ func main() {
 	go func() {
 		for _ = range signalChan {
 			fmt.Println("Stopping services...")
-			for _, s := range services {
-				fmt.Println("\tStopping", s.Name, "...")
-				platform.Stop(s)
+			for _, dep := range deps {
+				fmt.Println("\tStopping", dep.Name, "...")
+				platform.Stop(dep)
 			}
 			os.Exit(0)
 		}
