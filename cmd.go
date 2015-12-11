@@ -6,8 +6,6 @@ import (
 )
 
 func Exec(name string, c ...string) ([]byte, error) {
-	verbose := self.GetBool("verbose")
-
 	cmd := exec.Command(name, c...)
 	if verbose {
 		cmd.Env = os.Environ()

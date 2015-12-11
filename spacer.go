@@ -9,36 +9,40 @@ import (
 
 const CONFIG_DEPENDENCY_KEY = "dependency"
 
-var self *viper.Viper
-
-func init() {
-	self = viper.New()
-	self.AutomaticEnv()
-
-	self.SetDefault("listen", ":9064")
-	self.SetDefault("prefix", "_services")
-	self.SetDefault("verbose", false)
-
-	self.AddConfigPath(".")
-	self.SetConfigType("toml")
-	self.SetConfigName("spacer")
-
-	err := self.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
+type Spacer struct {
+	*viper.Viper
 }
 
-func getDependencies() []Service {
+func NewSpacer(configPath string) (*Spacer, error) {
+	v := viper.New()
+	v.AutomaticEnv()
+
+	v.SetDefault("listen", ":9064")
+	v.SetDefault("prefix", "_services")
+	v.SetDefault("verbose", false)
+
+	v.AddConfigPath(configPath)
+	v.SetConfigType("toml")
+	v.SetConfigName("spacer")
+
+	err := v.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Spacer{v}, nil
+}
+
+func (s Spacer) Dependencies() []Service {
 	var deps []Service
 
-	for _, serviceConfig := range self.Get(CONFIG_DEPENDENCY_KEY).([]map[string]interface{}) {
+	for _, serviceConfig := range s.Get(CONFIG_DEPENDENCY_KEY).([]map[string]interface{}) {
 		if v, ok := serviceConfig["local"]; ok {
 			localPath := v.(string)
 			deps = append(deps, Service{
 				LocalPath: localPath,
 				Name:      filepath.Base(localPath),
-				Path:      self.GetString("prefix") + "/",
+				Path:      s.GetString("prefix") + "/",
 			})
 			continue
 		}
@@ -48,7 +52,7 @@ func getDependencies() []Service {
 			deps = append(deps, Service{
 				RemotePath: remotePath,
 				Name:       name,
-				Path:       self.GetString("prefix") + "/",
+				Path:       s.GetString("prefix") + "/",
 			})
 			continue
 		}

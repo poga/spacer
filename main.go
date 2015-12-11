@@ -8,11 +8,20 @@ import (
 	"os/signal"
 )
 
+var verbose bool
+
 func main() {
+	self, err := NewSpacer(".")
+	if err != nil {
+		panic(err)
+	}
+
+	verbose = self.GetBool("verbose")
 	dockerHost := self.GetString("DOCKER_HOST")
 	prefix := self.GetString("prefix")
+
 	platform := NewDockerCompose(dockerHost, prefix)
-	deps := getDependencies()
+	deps := self.Dependencies()
 
 	for _, dep := range deps {
 		fmt.Println("Initializing", dep.Name)
