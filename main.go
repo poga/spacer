@@ -6,13 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-
-	"github.com/spf13/viper"
 )
 
 func main() {
-	dockerHost := viper.GetString("DOCKER_HOST")
-	prefix := viper.GetString("prefix")
+	dockerHost := self.GetString("DOCKER_HOST")
+	prefix := self.GetString("prefix")
 	platform := NewDockerCompose(dockerHost, prefix)
 	deps := getDependencies()
 
@@ -57,6 +55,6 @@ func main() {
 		}
 	}()
 
-	fmt.Println("Spacer is ready and rocking at " + viper.GetString("listen"))
-	http.ListenAndServe(viper.GetString("listen"), nil)
+	fmt.Println("Spacer is ready and rocking at " + self.GetString("listen"))
+	http.ListenAndServe(self.GetString("listen"), nil)
 }
