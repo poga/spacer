@@ -1,6 +1,6 @@
 # Spacer
 
-Spacer helps you manage your microservice dependencies.
+Spacer is a package manger designed for microservices.
 
 ## Synopsis
 
@@ -31,13 +31,7 @@ Hello World
 ## Development
 
 1. git clone `git clone git@github.com:poga/spacer.git`
-2. Setup Spacerfile, each line is a microservice repo on github. we also support sub folder in a repo. For example:
-    ```
-    poga/spacer/examples/counter
-    poga/spacer/examples/hello
-    ```
-    Checkout https://github.com/poga/spacer/tree/master/examples/counter and https://github.com/poga/spacer/tree/master/examples/hello for example services.
-
+2. Setup Spacerfile
 3. `go run *.go`
 
 ## Todo
