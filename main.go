@@ -26,21 +26,25 @@ func main() {
 	for _, dep := range deps {
 		fmt.Println("Initializing", dep.Name)
 		fmt.Println("Cloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
-		out, err := dep.Fetch()
+		_, err := dep.Fetch()
 		if err != nil {
 			if err != ErrLocalPathAlreadyExists {
 				log.Panic(err)
 			}
 		}
+	}
 
+	for _, dep := range deps {
 		// docker-compose build && docker-compose up
 		fmt.Println("Building", platform.ConfigPath(dep), "...")
-		out, err = platform.Build(dep)
+		out, err := platform.Build(dep)
 		if err != nil {
 			fmt.Println(string(out))
 			log.Panic(err)
 		}
+	}
 
+	for _, dep := range deps {
 		fmt.Println("Starting", platform.ConfigPath(dep), "...")
 		platform.Start(dep)
 	}
