@@ -25,7 +25,7 @@ func main() {
 
 	for _, dep := range deps {
 		fmt.Println("Initializing", dep.Name)
-		fmt.Println("\tCloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
+		fmt.Println("Cloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
 		out, err := dep.Fetch()
 		if err != nil {
 			if err != ErrLocalPathAlreadyExists {
@@ -34,14 +34,14 @@ func main() {
 		}
 
 		// docker-compose build && docker-compose up
-		fmt.Println("\tBuilding", platform.ConfigPath(dep), "...")
+		fmt.Println("Building", platform.ConfigPath(dep), "...")
 		out, err = platform.Build(dep)
 		if err != nil {
 			fmt.Println(string(out))
 			log.Panic(err)
 		}
 
-		fmt.Println("\tStarting", platform.ConfigPath(dep), "...")
+		fmt.Println("Starting", platform.ConfigPath(dep), "...")
 		platform.Start(dep)
 	}
 
@@ -57,7 +57,7 @@ func main() {
 		for _ = range signalChan {
 			fmt.Println("Stopping services...")
 			for _, dep := range deps {
-				fmt.Println("\tStopping", dep.Name, "...")
+				fmt.Println("Stopping", dep.Name, "...")
 				platform.Stop(dep)
 			}
 			os.Exit(0)
