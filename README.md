@@ -7,7 +7,7 @@ Spacer is a package manger designed for microservices.
 First, create a file called `spacer.toml` with the following content:
 ```
 [[Service]]
-repo = "poga/spacer/examples/hello"
+local = "examples/hello"
 ```
 
 Now we can boot them up and setup a easy-to-use proxy with one command:
