@@ -5,6 +5,7 @@ import (
 	"os/exec"
 )
 
+// Exec will execute give command and respect verbose config
 func Exec(name string, c ...string) ([]byte, error) {
 	cmd := exec.Command(name, c...)
 	if verbose {

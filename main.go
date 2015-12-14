@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,16 +24,8 @@ func main() {
 	platform := NewDockerCompose(dockerHost, prefix)
 	deps := self.Dependencies()
 
-	for _, dep := range deps {
-		fmt.Println("Initializing", dep.Name)
-		fmt.Println("Cloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
-		_, err := dep.Fetch()
-		if err != nil {
-			if err != ErrLocalPathAlreadyExists {
-				log.Panic(err)
-			}
-		}
-	}
+	fetchDependencies(self)
+	verifyDependencyVersion(self)
 
 	for _, dep := range deps {
 		// docker-compose build && docker-compose up
@@ -70,4 +63,70 @@ func main() {
 
 	fmt.Println("Spacer is ready and rocking at " + self.GetString("listen"))
 	http.ListenAndServe(self.GetString("listen"), nil)
+}
+
+func verifyDependencyVersion(s *Spacer) (map[string]string, error) {
+	var queue []*Spacer
+	queue = append(queue, s)
+
+	trace := make(map[string]string)
+
+	for {
+		if len(queue) == 0 {
+			break
+		}
+
+		var x *Spacer
+		x, queue = queue[len(queue)-1], queue[:len(queue)-1]
+
+		for _, dep := range x.Dependencies() {
+			if _, exist := trace[dep.Name]; exist {
+				if trace[dep.Name] == dep.VersionIdentifier() {
+					continue
+				} else {
+					return nil, errors.New("Conflict Dependency Version")
+				}
+			}
+
+			trace[dep.Name] = dep.VersionIdentifier()
+			spacer, err := NewSpacer(dep.Path)
+			if err != nil {
+				return nil, err
+			}
+			queue = append(queue, spacer)
+		}
+	}
+
+	return trace, nil
+}
+
+func fetchDependencies(s *Spacer) error {
+	var queue []*Spacer
+	queue = append(queue, s)
+
+	for {
+		if len(queue) == 0 {
+			break
+		}
+
+		var x *Spacer
+		x, queue = queue[len(queue)-1], queue[:len(queue)-1]
+
+		for _, dep := range x.Dependencies() {
+			fmt.Println("Initializing", dep.Name)
+			fmt.Println("Cloning", dep.LocalPath, dep.RemotePath, "as", dep.Name)
+			_, err := dep.Fetch()
+			if err != nil && err != ErrLocalPathAlreadyExists {
+				return err
+			}
+
+			spacer, err := NewSpacer(dep.Path)
+			if err != nil {
+				return err
+			}
+			queue = append(queue, spacer)
+		}
+	}
+
+	return nil
 }

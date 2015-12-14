@@ -35,3 +35,15 @@ func (s *Service) Fetch() ([]byte, error) {
 
 	return nil, errors.New("Unknown dependency format " + s.Name)
 }
+
+func (s *Service) VersionIdentifier() string {
+	if s.Commit != "" {
+		return s.Commit
+	}
+
+	if s.Tag != "" {
+		return s.Tag
+	}
+
+	return ""
+}
