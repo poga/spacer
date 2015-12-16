@@ -28,7 +28,18 @@ func (s *Service) Fetch() ([]byte, error) {
 	}
 
 	if s.RemotePath != "" {
-		return Exec("git", "clone", "--depth=1", s.RemotePath, s.Path+s.Name)
+		out, err := Exec("git", "clone", "--depth=1", s.RemotePath, s.Path+s.Name)
+		if err != nil {
+			return out, err
+		}
+		if s.VersionIdentifier() != "" {
+			out, err := Exec("git", "checkout", s.VersionIdentifier)
+			if err != nil {
+				return out, err
+			}
+		}
+
+		return out, nil
 	} else if s.LocalPath != "" {
 		return Exec("cp", "-r", s.LocalPath, s.Path)
 	}
