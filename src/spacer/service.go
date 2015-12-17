@@ -33,7 +33,7 @@ func (s *Service) Fetch() ([]byte, error) {
 			return out, err
 		}
 		if s.VersionIdentifier() != "" {
-			out, err := Exec("git", "checkout", s.VersionIdentifier)
+			out, err := Exec("git", "checkout", s.VersionIdentifier())
 			if err != nil {
 				return out, err
 			}
