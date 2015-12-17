@@ -32,7 +32,8 @@ Hello World
 
 1. git clone `git clone git@github.com:poga/spacer.git`
 2. Setup Spacerfile
-3. `go run *.go`
+3. `gb build all`
+4. `./bin/spacer`
 
 ## Todo
 
