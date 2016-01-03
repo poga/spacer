@@ -12,6 +12,13 @@ import (
 var verbose bool
 
 func main() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+}
+
+func Run() {
 	self, err := NewSpacer(".")
 	if err != nil {
 		panic(err)

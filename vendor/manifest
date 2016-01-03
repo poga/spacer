@@ -57,6 +57,19 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/spf13/cobra",
+			"repository": "https://github.com/spf13/cobra",
+			"revision": "b3f29e98e63a3618988a231fd02b45c1e6369d4f",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/spf13/cobra/cobra",
+			"repository": "https://github.com/spf13/cobra",
+			"revision": "b3f29e98e63a3618988a231fd02b45c1e6369d4f",
+			"branch": "master",
+			"path": "/cobra"
+		},
+		{
 			"importpath": "github.com/spf13/jwalterweatherman",
 			"repository": "https://github.com/spf13/jwalterweatherman",
 			"revision": "c2aa07df593850a04644d77bb757d002e517a296",
