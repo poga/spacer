@@ -1,6 +1,6 @@
 # Spacer
 
-Spacer is a package manger designed for microservices.
+Spacer is a dependency manger designed for microservices.
 
 ## Synopsis
 
