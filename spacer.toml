@@ -1,4 +1,0 @@
-verbose = true
-
-[[dependency]]
-local = "examples/hello"
