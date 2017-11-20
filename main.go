@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -16,10 +17,12 @@ import (
 
 var appLogger *log.Entry
 
-const APP_NAME = "PoESocial"
+const APP_NAME = "PoESocial" // can't contain '_'
 const BROKER = "localhost:9092"
 const DELEGATOR = "http://localhost:8080"
 const WRITE_PROXY_LISTEN = ":9064"
+const CONSUMER_GROUP_PREFIX = "spacer"
+const SCHEMA_VERSION = 0
 
 func main() {
 	routes := make(map[string]string)
@@ -62,9 +65,11 @@ func main() {
 	}
 	go http.ListenAndServe(WRITE_PROXY_LISTEN, writeProxy)
 
+	groupID := strings.Join([]string{CONSUMER_GROUP_PREFIX, APP_NAME, fmt.Sprintf("%d", SCHEMA_VERSION)}, "-")
+
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":               BROKER,
-		"group.id":                        fmt.Sprintf("spacer-router-%s", APP_NAME),
+		"group.id":                        groupID,
 		"session.timeout.ms":              6000,
 		"go.application.rebalance.enable": true,
 		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
