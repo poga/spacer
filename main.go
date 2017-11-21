@@ -143,7 +143,22 @@ func invoke(route string, data []byte) error {
 
 	if resp.StatusCode != 200 {
 		return errors.New(fmt.Sprintf("Function not ok: %d", resp.StatusCode))
+	}
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "unable to read function return value")
+	}
+
+	// TODO: function return {error: ...} 也要當作出錯
+	var ret map[string]json.RawMessage
+	err := json.Unmarshal(body, &ret)
+	if err != nil {
+		return errors.Wrap(err, "Failed to decode JSON")
+	}
+
+	if msg, ok := ret["error"]; ok {
+		return errors.New(fmt.Sprintf("Function returned error: %s", msg))
 	}
 	return nil
 }
