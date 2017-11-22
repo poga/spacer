@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -42,7 +43,10 @@ var replayCmd = &cobra.Command{
 	Use:   "replay",
 	Short: "replay specified log",
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: run with alternative config
+		// use an unique consumer group to replay
+		s1 := rand.NewSource(time.Now().UnixNano())
+		r1 := rand.New(s1)
+		viper.Set("consumer_group_prefix", fmt.Sprintf("spacer-replay-%f", r1.Float64()))
 		run()
 	},
 }
