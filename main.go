@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +22,15 @@ var appLogger *log.Entry
 var APP *viper.Viper = viper.New()
 var SPACER *viper.Viper = viper.New()
 
+var RootCmd = &cobra.Command{
+	Use:   "spacer",
+	Short: "serverless platform",
+	Long:  `blah`,
+	Run: func(cmd *cobra.Command, args []string) {
+		run()
+	},
+}
+
 func init() {
 	APP.SetConfigName("app")
 	SPACER.SetConfigName("spacer")
@@ -27,10 +38,10 @@ func init() {
 	SPACER.SetDefault("consumer_group_prefix", "spacer")
 }
 
-func main() {
+func run() {
 	var APP_NAME = APP.GetString("app_name")
 	var DELEGATOR = SPACER.GetString("delegator")
-	var BROKERS = SPACER.GetStringSlice("brokers")
+	var BROKERS = strings.Join(SPACER.GetStringSlice("brokers"), ",")
 
 	routes := make(map[string]string)
 	// should support multiple app in one proxy
@@ -136,6 +147,14 @@ func main() {
 		default:
 			appLogger.Info("Unknown", e)
 		}
+	}
+
+}
+
+func main() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
