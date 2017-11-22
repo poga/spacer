@@ -27,7 +27,30 @@ var RootCmd = &cobra.Command{
 	Short: "serverless platform",
 	Long:  `blah`,
 	Run: func(cmd *cobra.Command, args []string) {
+	},
+}
+
+var startCmd = &cobra.Command{
+	Use:   "start",
+	Short: "start spacer",
+	Run: func(cmd *cobra.Command, args []string) {
 		run()
+	},
+}
+
+var replayCmd = &cobra.Command{
+	Use:   "replay",
+	Short: "replay specified log",
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: run with alternative config
+		run()
+	},
+}
+
+var versionCmd = &cobra.Command{
+	Use: "version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("0.1")
 	},
 }
 
@@ -36,6 +59,8 @@ func init() {
 	SPACER.SetConfigName("spacer")
 
 	SPACER.SetDefault("consumer_group_prefix", "spacer")
+
+	RootCmd.AddCommand(startCmd, replayCmd, versionCmd)
 }
 
 func run() {
