@@ -11,30 +11,37 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
-
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var appLogger *log.Entry
 
-const APP_NAME = "PoESocial" // can't contain '_'
-const BROKER = "localhost:9092"
-const DELEGATOR = "http://localhost:8080"
-const WRITE_PROXY_LISTEN = ":9064"
-const CONSUMER_GROUP_PREFIX = "spacer"
-const SCHEMA_VERSION = 0
+var APP *viper.Viper = viper.New()
+var SPACER *viper.Viper = viper.New()
+
+func init() {
+	APP.SetConfigName("app")
+	SPACER.SetConfigName("spacer")
+
+	SPACER.SetDefault("consumer_group_prefix", "spacer")
+}
 
 func main() {
+	var APP_NAME = APP.GetString("app_name")
+	var DELEGATOR = SPACER.GetString("delegator")
+	var BROKERS = SPACER.GetStringSlice("brokers")
+
 	routes := make(map[string]string)
 	// should support multiple app in one proxy
 	routes["PoESocial_stat:UPDATE"] = fmt.Sprintf("%s/%s", DELEGATOR, "get_stashes")
 
 	topic := fmt.Sprintf("^%s_*", APP_NAME)
 
-	appLogger = log.WithFields(log.Fields{"app_name": APP_NAME, "broker": BROKER})
+	appLogger = log.WithFields(log.Fields{"app_name": APP_NAME, "broker": BROKERS})
 
 	// create a producer
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": BROKER})
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": BROKERS})
 	if err != nil {
 		appLogger.Fatal("Unable to create producer:", err)
 	}
@@ -63,12 +70,12 @@ func main() {
 	if err != nil {
 		appLogger.Fatal(err)
 	}
-	go http.ListenAndServe(WRITE_PROXY_LISTEN, writeProxy)
+	go http.ListenAndServe(SPACER.GetString("write_proxy_listen"), writeProxy)
 
-	groupID := strings.Join([]string{CONSUMER_GROUP_PREFIX, APP_NAME, fmt.Sprintf("%d", SCHEMA_VERSION)}, "-")
+	groupID := strings.Join([]string{SPACER.GetString("consumer_group_prefix"), APP_NAME}, "-")
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":               BROKER,
+		"bootstrap.servers":               BROKERS,
 		"group.id":                        groupID,
 		"session.timeout.ms":              6000,
 		"go.application.rebalance.enable": true,
@@ -152,7 +159,7 @@ func invoke(route string, data []byte) error {
 
 	// TODO: function return {error: ...} 也要當作出錯
 	var ret map[string]json.RawMessage
-	err := json.Unmarshal(body, &ret)
+	err = json.Unmarshal(body, &ret)
 	if err != nil {
 		return errors.Wrap(err, "Failed to decode JSON")
 	}
@@ -186,7 +193,7 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	topic := fmt.Sprintf("%s_%s", APP_NAME, write.Object)
+	topic := fmt.Sprintf("%s_%s", APP.GetString("app_name"), write.Object)
 	for key, value := range write.Data {
 		fmt.Println("Writing", write.Object, key)
 		p.produceChan <- &kafka.Message{
