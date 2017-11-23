@@ -59,10 +59,21 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	APP.AddConfigPath(".")
 	APP.SetConfigName("app")
+	SPACER.AddConfigPath(".")
 	SPACER.SetConfigName("spacer")
 
 	SPACER.SetDefault("consumer_group_prefix", "spacer")
+
+	err := APP.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+	err = SPACER.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
 
 	RootCmd.AddCommand(startCmd, replayCmd, versionCmd)
 }
