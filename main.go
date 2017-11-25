@@ -173,7 +173,7 @@ func run() {
 
 			err := invoke(routes[routePath], []byte(string(e.Value)))
 			if err != nil {
-				appLogger.Error("Invocation Error: %v\n", err)
+				appLogger.WithField("route", routes[routePath]).Errorf("Invocation Error: %v\n", err)
 				continue
 			}
 			_, err = consumer.CommitMessage(e)
@@ -254,7 +254,6 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	topic := fmt.Sprintf("%s_%s", APP.GetString("app_name"), write.Object)
 	for key, value := range write.Data {
-		fmt.Println("Writing", write.Object, key)
 		p.produceChan <- &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 			Key:            []byte(key),
