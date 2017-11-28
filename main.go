@@ -22,7 +22,7 @@ var appLogger *log.Entry
 var APP *viper.Viper = viper.New()
 var SPACER *viper.Viper = viper.New()
 
-var RootCmd = &cobra.Command{
+var rootCmd = &cobra.Command{
 	Use:   "spacer",
 	Short: "serverless platform",
 	Long:  `blah`,
@@ -65,18 +65,18 @@ func init() {
 
 	err := APP.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
 	err = SPACER.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
 
-	RootCmd.AddCommand(startCmd, replayCmd, versionCmd)
+	rootCmd.AddCommand(startCmd, replayCmd, versionCmd)
 }
 
 func run() {
-	var APP_NAME = APP.GetString("app_name")
+	var AppName = APP.GetString("app_name")
 	var DELEGATOR = SPACER.GetString("delegator")
 	var BROKERS = strings.Join(SPACER.GetStringSlice("brokers"), ",")
 
@@ -84,9 +84,9 @@ func run() {
 	// should support multiple app in one proxy
 	routes["PoESocial_stat:UPDATE"] = fmt.Sprintf("%s/%s", DELEGATOR, "get_stashes")
 
-	topic := fmt.Sprintf("^%s_*", APP_NAME)
+	topic := fmt.Sprintf("^%s_*", AppName)
 
-	appLogger = log.WithFields(log.Fields{"app_name": APP_NAME, "broker": BROKERS})
+	appLogger = log.WithFields(log.Fields{"app_name": AppName, "broker": BROKERS})
 
 	// create a producer
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": BROKERS})
@@ -120,7 +120,7 @@ func run() {
 	}
 	go http.ListenAndServe(SPACER.GetString("write_proxy_listen"), writeProxy)
 
-	groupID := strings.Join([]string{SPACER.GetString("consumer_group_prefix"), APP_NAME}, "-")
+	groupID := strings.Join([]string{SPACER.GetString("consumer_group_prefix"), AppName}, "-")
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":               BROKERS,
@@ -189,7 +189,7 @@ func run() {
 }
 
 func main() {
-	if err := RootCmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
