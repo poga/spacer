@@ -205,7 +205,7 @@ func invoke(route string, data []byte) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Function not ok: %d", resp.StatusCode))
+		return fmt.Errorf("Function not ok: %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -213,7 +213,6 @@ func invoke(route string, data []byte) error {
 		return errors.Wrap(err, "unable to read function return value")
 	}
 
-	// TODO: function return {error: ...} 也要當作出錯
 	var ret map[string]json.RawMessage
 	err = json.Unmarshal(body, &ret)
 	if err != nil {
@@ -221,7 +220,7 @@ func invoke(route string, data []byte) error {
 	}
 
 	if msg, ok := ret["error"]; ok {
-		return errors.New(fmt.Sprintf("Function returned error: %s", msg))
+		return fmt.Errorf("Function returned error: %s", msg)
 	}
 	return nil
 }
@@ -274,7 +273,7 @@ func refreshMetadata(consumer *kafka.Consumer, logger *log.Entry) {
 			continue
 		}
 		keys := []string{}
-		for k, _ := range metadata.Topics {
+		for k := range metadata.Topics {
 			keys = append(keys, k)
 		}
 		// logger.Info("metadata: ", keys)
