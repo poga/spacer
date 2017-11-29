@@ -1,0 +1,13 @@
+package: github.com/poga/spacer
+import:
+- package: github.com/confluentinc/confluent-kafka-go
+  version: ^0.11.0
+  subpackages:
+  - kafka
+- package: github.com/pkg/errors
+  version: ^0.8.0
+- package: github.com/sirupsen/logrus
+- package: github.com/spf13/cobra
+  version: ^0.0.1
+- package: github.com/spf13/viper
+  version: ^1.0.0
