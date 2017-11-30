@@ -17,11 +17,11 @@ import (
 type Application struct {
 	*viper.Viper
 	Log    *log.Entry
-	Routes map[Event]FuncPath
+	Routes map[Event]FuncName
 }
 
 type Event string
-type FuncPath string
+type FuncName string
 
 func NewApplication() (*Application, error) {
 	config := viper.New()
@@ -38,7 +38,7 @@ func NewApplication() (*Application, error) {
 		return nil, err
 	}
 
-	router := make(map[Event]FuncPath)
+	router := make(map[Event]FuncName)
 	// load routes
 	routeConfig := config.Sub("routes")
 	for _, objectAndEvent := range routeConfig.AllKeys() {
@@ -46,10 +46,7 @@ func NewApplication() (*Application, error) {
 		object := parts[0]
 		eventType := parts[1]
 		for _, funcName := range routeConfig.GetStringSlice(objectAndEvent) {
-			router[GetRouteEvent(object, eventType)] = FuncPath(strings.Join([]string{
-				config.GetString("delegator"),
-				funcName,
-			}, "/"))
+			router[GetRouteEvent(object, eventType)] = FuncName(funcName)
 		}
 	}
 
@@ -76,8 +73,8 @@ func GetRouteEvent(object string, eventType string) Event {
 	return Event(fmt.Sprintf("%s:%s", object, strings.ToUpper(eventType)))
 }
 
-func GetAbsoluteFuncPath(delegator string, funcName string) FuncPath {
-	return FuncPath(fmt.Sprintf("%s/%s", delegator, funcName))
+func GetAbsoluteFuncPath(delegator string, funcName string) FuncName {
+	return FuncName(fmt.Sprintf("%s/%s", delegator, funcName))
 }
 
 func (app *Application) ConsumerGroupID() string {
@@ -100,9 +97,9 @@ func (app *Application) Name() string {
 	return app.GetString("app_name")
 }
 
-func (app *Application) Invoke(fp FuncPath, data []byte) error {
-	app.Log.Infof("Invoking %s\n", string(fp))
-	resp, err := http.Post(string(fp), "application/json", bytes.NewReader(data))
+func (app *Application) Invoke(fn FuncName, data []byte) error {
+	app.Log.Infof("Invoking %s", string(fn))
+	resp, err := http.Post(strings.Join([]string{app.GetString("delegator"), string(fn)}, "/"), "application/json", bytes.NewReader(data))
 
 	if err != nil {
 		return errors.Wrap(err, "post event handler failed")
@@ -128,5 +125,4 @@ func (app *Application) Invoke(fp FuncPath, data []byte) error {
 		return fmt.Errorf("Function returned error: %s", msg)
 	}
 	return nil
-
 }
