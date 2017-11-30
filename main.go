@@ -12,6 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func run() {
 	app, err := NewApplication()
 	if err != nil {
@@ -122,12 +128,6 @@ func run() {
 
 }
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
-	}
-}
-
 type WriteProxy struct {
 	produceChan chan *kafka.Message
 	app         *Application
@@ -170,6 +170,7 @@ type WriteRequest struct {
 
 func refreshMetadata(consumer *kafka.Consumer, logger *log.Entry) {
 	for {
+		time.Sleep(5 * time.Second)
 		metadata, err := consumer.GetMetadata(nil, true, 100)
 		if err != nil {
 			// somethimes it just timed out, ignore
@@ -181,6 +182,5 @@ func refreshMetadata(consumer *kafka.Consumer, logger *log.Entry) {
 			keys = append(keys, k)
 		}
 		// logger.Info("metadata: ", keys)
-		time.Sleep(5 * time.Second)
 	}
 }

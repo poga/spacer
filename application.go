@@ -45,7 +45,6 @@ func NewApplication() (*Application, error) {
 		parts := strings.Split(objectAndEvent, ".")
 		object := parts[0]
 		eventType := parts[1]
-		fmt.Println(objectAndEvent, parts)
 		for _, funcName := range routeConfig.GetStringSlice(objectAndEvent) {
 			router[GetRouteEvent(object, eventType)] = FuncPath(strings.Join([]string{
 				config.GetString("delegator"),
