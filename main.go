@@ -1,97 +1,27 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var appLogger *log.Entry
-
-var APP *viper.Viper = viper.New()
-var SPACER *viper.Viper = viper.New()
-
-var rootCmd = &cobra.Command{
-	Use:   "spacer",
-	Short: "serverless platform",
-	Long:  `blah`,
-	Run: func(cmd *cobra.Command, args []string) {
-	},
-}
-
-var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "start spacer",
-	Run: func(cmd *cobra.Command, args []string) {
-		run()
-	},
-}
-
-var replayCmd = &cobra.Command{
-	Use:   "replay",
-	Short: "replay specified log",
-	Run: func(cmd *cobra.Command, args []string) {
-		// use an unique consumer group to replay
-		viper.Set("consumer_group_prefix", fmt.Sprintf("spacer-replay-%d", time.Now().Nanosecond()))
-		run()
-	},
-}
-
-var versionCmd = &cobra.Command{
-	Use: "version",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("0.1")
-	},
-}
-
-func init() {
-	APP.AddConfigPath(".")
-	APP.SetConfigName("app")
-	SPACER.AddConfigPath(".")
-	SPACER.SetConfigName("spacer")
-
-	SPACER.SetDefault("consumer_group_prefix", "spacer")
-
-	err := APP.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
-	}
-	err = SPACER.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
-	}
-
-	rootCmd.AddCommand(startCmd, replayCmd, versionCmd)
-}
-
 func run() {
-	var AppName = APP.GetString("app_name")
-	var DELEGATOR = SPACER.GetString("delegator")
-	var BROKERS = strings.Join(SPACER.GetStringSlice("brokers"), ",")
-
-	routes := make(map[string]string)
-	// should support multiple app in one proxy
-	routes["PoESocial_stat:UPDATE"] = fmt.Sprintf("%s/%s", DELEGATOR, "get_stashes")
-
-	topic := fmt.Sprintf("^%s_*", AppName)
-
-	appLogger = log.WithFields(log.Fields{"app_name": AppName, "broker": BROKERS})
+	app, err := NewApplication()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// create a producer
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": BROKERS})
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": strings.Join(app.Brokers(), ",")})
 	if err != nil {
-		appLogger.Fatal("Unable to create producer:", err)
+		app.Log.Fatal("Unable to create producer:", err)
 	}
 
 	// generic logging for producer
@@ -101,30 +31,29 @@ func run() {
 			case *kafka.Message:
 				m := ev
 				if m.TopicPartition.Error != nil {
-					appLogger.Fatal("delivery failed", m.TopicPartition.Error)
+					app.Log.Fatal("delivery failed", m.TopicPartition.Error)
 				} else {
-					appLogger.Infof("Delivered message to topic %s [%d] at offset %v\n",
+					app.Log.Infof("Delivered message to topic %s [%d] at offset %v\n",
 						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 				}
 				return
 			default:
-				appLogger.Info("Ignored event: %s\n", ev)
+				app.Log.Info("Ignored event: %s\n", ev)
 			}
 		}
 	}()
 
 	// create a proxy to let functions write data back to kafka
-	writeProxy, err := NewWriteProxy(producer.ProduceChannel())
+	writeProxy, err := NewWriteProxy(app, producer.ProduceChannel())
 	if err != nil {
-		appLogger.Fatal(err)
+		app.Log.Fatal(err)
 	}
-	go http.ListenAndServe(SPACER.GetString("write_proxy_listen"), writeProxy)
-
-	groupID := strings.Join([]string{SPACER.GetString("consumer_group_prefix"), AppName}, "-")
+	go http.ListenAndServe(app.GetString("write_proxy_listen"), writeProxy)
+	app.Log.Infof("Write Proxy Started: %s", app.GetString("write_proxy_listen"))
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":               BROKERS,
-		"group.id":                        groupID,
+		"bootstrap.servers":               strings.Join(app.Brokers(), ","),
+		"group.id":                        app.ConsumerGroupID(),
 		"session.timeout.ms":              6000,
 		"go.application.rebalance.enable": true,
 		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
@@ -132,17 +61,18 @@ func run() {
 		"enable.auto.commit":              false,
 	})
 	if err != nil {
-		appLogger.Fatal("Failed to create consumer", err)
+		app.Log.Fatal("Failed to create consumer", err)
 	}
 	defer consumer.Close()
 
-	err = consumer.SubscribeTopics([]string{topic}, nil)
+	err = consumer.SubscribeTopics([]string{app.Subscription()}, nil)
 	if err != nil {
-		appLogger.Fatal("Failed to subscribe topics %v, %s\n", topic, err)
+		app.Log.Fatal("Failed to subscribe topics %v, %s\n", app.Subscription(), err)
 	}
+	app.Log.Infof("Consumer Started")
 
 	// periodically refresh metadata to know if there's any new topic created
-	go refreshMetadata(consumer, appLogger)
+	go refreshMetadata(consumer, app.Log)
 
 	// start the consumer loop
 	for {
@@ -152,37 +82,41 @@ func run() {
 		}
 		switch e := ev.(type) {
 		case kafka.AssignedPartitions:
-			appLogger.Info(e)
+			app.Log.Info(e)
 			consumer.Assign(e.Partitions)
 		case kafka.RevokedPartitions:
-			appLogger.Info(e)
+			app.Log.Info(e)
 			consumer.Unassign()
 		case *kafka.Message:
-			appLogger.Info("%% Message on ", e.TopicPartition)
+			app.Log.Info("%% Message on ", e.TopicPartition)
 
-			routePath := fmt.Sprintf("%s:UPDATE", *e.TopicPartition.Topic)
-			appLogger.Info("Looking up route ", routePath)
+			parts := strings.Split(*e.TopicPartition.Topic, "_")
+			object := parts[1]
 
-			if _, ok := routes[routePath]; !ok {
-				appLogger.Info("Route not found")
+			routePath := GetRouteEvent(object, "UPDATE")
+			app.Log.Info("Looking up route ", routePath)
+
+			if _, ok := app.Routes[routePath]; !ok {
+				app.Log.Info("Route not found")
 				continue
 			}
 
-			err := invoke(routes[routePath], []byte(string(e.Value)))
+			err := app.Invoke(app.Routes[routePath], []byte(string(e.Value)))
+
 			if err != nil {
-				appLogger.WithField("route", routes[routePath]).Errorf("Invocation Error: %v\n", err)
+				app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v\n", err)
 				continue
 			}
 			_, err = consumer.CommitMessage(e)
 			if err != nil {
-				appLogger.Error("Commit Error: %v %v\n", e, err)
+				app.Log.Error("Commit Error: %v %v\n", e, err)
 			}
 		case kafka.PartitionEOF:
-			appLogger.Info("%% Reached", e)
+			app.Log.Info("%% Reached", e)
 		case kafka.Error:
-			appLogger.Fatal("%% Error", e)
+			app.Log.Fatal("%% Error", e)
 		default:
-			appLogger.Info("Unknown", e)
+			app.Log.Info("Unknown", e)
 		}
 	}
 
@@ -190,65 +124,35 @@ func run() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-}
-
-func invoke(route string, data []byte) error {
-	appLogger.Infof("Invoking %s\n", route)
-	resp, err := http.Post(route, "application/json", bytes.NewReader(data))
-
-	if err != nil {
-		return errors.Wrap(err, "post event handler failed")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Function not ok: %d", resp.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.Wrap(err, "unable to read function return value")
-	}
-
-	var ret map[string]json.RawMessage
-	err = json.Unmarshal(body, &ret)
-	if err != nil {
-		return errors.Wrap(err, "Failed to decode JSON")
-	}
-
-	if msg, ok := ret["error"]; ok {
-		return fmt.Errorf("Function returned error: %s", msg)
-	}
-	return nil
 }
 
 type WriteProxy struct {
 	produceChan chan *kafka.Message
+	app         *Application
 }
 
-func NewWriteProxy(produceChan chan *kafka.Message) (*WriteProxy, error) {
-	proxy := WriteProxy{produceChan}
+func NewWriteProxy(app *Application, produceChan chan *kafka.Message) (*WriteProxy, error) {
+	proxy := WriteProxy{produceChan, app}
 	return &proxy, nil
 }
 
 func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		appLogger.Error("read body failed", err)
+		p.app.Log.Error("read body failed", err)
 		w.WriteHeader(400)
 		return
 	}
 	var write WriteRequest
 	err = json.Unmarshal(body, &write)
 	if err != nil {
-		appLogger.Errorf("decode body failed %v\n", err)
+		p.app.Log.Errorf("decode body failed %v\n", err)
 		w.WriteHeader(400)
 		return
 	}
-	topic := fmt.Sprintf("%s_%s", APP.GetString("app_name"), write.Object)
+	topic := fmt.Sprintf("%s_%s", p.app.GetString("app_name"), write.Object)
 	for key, value := range write.Data {
 		p.produceChan <- &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
