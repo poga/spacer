@@ -39,7 +39,7 @@ func run() {
 				if m.TopicPartition.Error != nil {
 					app.Log.Fatal("delivery failed", m.TopicPartition.Error)
 				} else {
-					app.Log.Infof("Delivered message to topic %s [%d] at offset %v\n",
+					app.Log.Infof("Delivered message to topic %s [%d] at offset %v",
 						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 				}
 				return
@@ -73,7 +73,7 @@ func run() {
 
 	err = consumer.SubscribeTopics([]string{app.Subscription()}, nil)
 	if err != nil {
-		app.Log.Fatal("Failed to subscribe topics %v, %s\n", app.Subscription(), err)
+		app.Log.Fatal("Failed to subscribe topics %v, %s", app.Subscription(), err)
 	}
 	app.Log.Infof("Consumer Started")
 
@@ -110,12 +110,12 @@ func run() {
 			err := app.Invoke(app.Routes[routePath], []byte(string(e.Value)))
 
 			if err != nil {
-				app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v\n", err)
+				app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
 				continue
 			}
 			_, err = consumer.CommitMessage(e)
 			if err != nil {
-				app.Log.Error("Commit Error: %v %v\n", e, err)
+				app.Log.Errorf("Commit Error: %v %v", e, err)
 			}
 		case kafka.PartitionEOF:
 			app.Log.Info("%% Reached", e)
@@ -148,7 +148,7 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var write WriteRequest
 	err = json.Unmarshal(body, &write)
 	if err != nil {
-		p.app.Log.Errorf("decode body failed %v\n", err)
+		p.app.Log.Errorf("decode body failed %v", err)
 		w.WriteHeader(400)
 		return
 	}
