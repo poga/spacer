@@ -99,8 +99,16 @@ func (app *Application) Name() string {
 
 func (app *Application) Invoke(fn FuncName, data []byte) error {
 	app.Log.Infof("Invoking %s", string(fn))
-	resp, err := http.Post(strings.Join([]string{app.GetString("delegator"), string(fn)}, "/"), "application/json", bytes.NewReader(data))
+	client := &http.Client{}
+	req, err := http.NewRequest(
+		"POST",
+		strings.Join([]string{app.GetString("delegator"), string(fn)}, "/"),
+		bytes.NewReader(data),
+	)
 
+	req.Header.Set("User-Agent", "Spacer_Event_Router")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "post event handler failed")
 	}
