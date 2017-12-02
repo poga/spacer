@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	log "github.com/sirupsen/logrus"
 )
+
+const CONCURRENT_FUNC = 5000
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -69,7 +73,18 @@ func run() {
 	if err != nil {
 		app.Log.Fatal("Failed to create consumer", err)
 	}
-	defer consumer.Close()
+
+	// TODO: lock this or use goroutine
+	lastProcessedMessages := make(map[string]*kafka.Message)
+	defer func() {
+		for _, msg := range lastProcessedMessages {
+			_, err := consumer.CommitMessage(msg)
+			if err != nil {
+				app.Log.Fatal(err)
+			}
+		}
+		consumer.Close()
+	}()
 
 	err = consumer.SubscribeTopics([]string{app.Subscription()}, nil)
 	if err != nil {
@@ -77,11 +92,24 @@ func run() {
 	}
 	app.Log.Infof("Consumer Started")
 
+	// close consumers when user press ctrl+c
+	run := true
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			fmt.Println("Exiting...")
+			run = false
+		}
+	}()
+
 	// periodically refresh metadata to know if there's any new topic created
 	go refreshMetadata(consumer, app.Log)
 
+	runFunc := make(chan *kafka.Message, CONCURRENT_FUNC)
+
 	// start the consumer loop
-	for {
+	for run {
 		ev := consumer.Poll(100)
 		if ev == nil {
 			continue
@@ -94,7 +122,7 @@ func run() {
 			app.Log.Info(e)
 			consumer.Unassign()
 		case *kafka.Message:
-			app.Log.Debugf("Message Received %s", e.TopicPartition)
+			app.Log.Infof("Message Received %s", e.TopicPartition)
 
 			parts := strings.Split(*e.TopicPartition.Topic, "_")
 			object := parts[1]
@@ -104,19 +132,33 @@ func run() {
 
 			if _, ok := app.Routes[routePath]; !ok {
 				app.Log.Debugf("Route not found")
+				lastProcessedMessages[*e.TopicPartition.Topic] = e
 				continue
 			}
 
-			err := app.Invoke(app.Routes[routePath], []byte(string(e.Value)))
+			// block when exceed CONCURRENT_FUNC
+			runFunc <- e
 
-			if err != nil {
-				app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
-				continue
-			}
-			_, err = consumer.CommitMessage(e)
-			if err != nil {
-				app.Log.Errorf("Commit Error: %v %v", e, err)
-			}
+			go func() {
+				msg := <-runFunc
+				parts := strings.Split(*msg.TopicPartition.Topic, "_")
+				object := parts[1]
+
+				routePath := GetRouteEvent(object, "UPDATE")
+
+				err := app.Invoke(app.Routes[routePath], []byte(string(msg.Value)))
+
+				if err != nil {
+					app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
+					return
+				}
+				_, err = consumer.CommitMessage(msg)
+				if err != nil {
+					app.Log.Errorf("Commit Error: %v %v", msg, err)
+					return
+				}
+				lastProcessedMessages[*e.TopicPartition.Topic] = e
+			}()
 		case kafka.PartitionEOF:
 			app.Log.Debugf("Reached %v", e)
 		case kafka.Error:
@@ -125,7 +167,6 @@ func run() {
 			app.Log.Debugf("Unknown Message %v", e)
 		}
 	}
-
 }
 
 type WriteProxy struct {
