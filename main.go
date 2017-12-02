@@ -39,12 +39,12 @@ func run() {
 				if m.TopicPartition.Error != nil {
 					app.Log.Fatal("delivery failed", m.TopicPartition.Error)
 				} else {
-					app.Log.Infof("Delivered message to topic %s [%d] at offset %v",
+					app.Log.Debugf("Delivered message to topic %s [%d] at offset %v",
 						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 				}
 				return
 			default:
-				app.Log.Info("Ignored event: %s\n", ev)
+				app.Log.Debugf("Ignored event: %s", ev)
 			}
 		}
 	}()
@@ -94,16 +94,16 @@ func run() {
 			app.Log.Info(e)
 			consumer.Unassign()
 		case *kafka.Message:
-			app.Log.Info("%% Message on ", e.TopicPartition)
+			app.Log.Debugf("Message Received %s", e.TopicPartition)
 
 			parts := strings.Split(*e.TopicPartition.Topic, "_")
 			object := parts[1]
 
 			routePath := GetRouteEvent(object, "UPDATE")
-			app.Log.Info("Looking up route ", routePath)
+			app.Log.Debugf("Looking up route %s", routePath)
 
 			if _, ok := app.Routes[routePath]; !ok {
-				app.Log.Info("Route not found")
+				app.Log.Debugf("Route not found")
 				continue
 			}
 
@@ -118,11 +118,11 @@ func run() {
 				app.Log.Errorf("Commit Error: %v %v", e, err)
 			}
 		case kafka.PartitionEOF:
-			app.Log.Info("%% Reached", e)
+			app.Log.Debugf("Reached %v", e)
 		case kafka.Error:
-			app.Log.Fatal("%% Error", e)
+			app.Log.Fatalf("Consumer Error %s", e)
 		default:
-			app.Log.Info("Unknown", e)
+			app.Log.Debugf("Unknown Message %v", e)
 		}
 	}
 
