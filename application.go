@@ -17,7 +17,7 @@ import (
 type Application struct {
 	*viper.Viper
 	Log    *log.Entry
-	Routes map[Event]FuncName
+	Routes map[Event][]FuncName
 }
 
 type Event string
@@ -38,15 +38,17 @@ func NewApplication() (*Application, error) {
 		return nil, err
 	}
 
-	router := make(map[Event]FuncName)
+	router := make(map[Event][]FuncName)
 	// load routes
 	routeConfig := config.Sub("routes")
 	for _, objectAndEvent := range routeConfig.AllKeys() {
 		parts := strings.Split(objectAndEvent, ".")
 		object := parts[0]
 		eventType := parts[1]
+		routerKey := GetRouteEvent(object, eventType)
+		router[routerKey] = make([]FuncName, 0)
 		for _, funcName := range routeConfig.GetStringSlice(objectAndEvent) {
-			router[GetRouteEvent(object, eventType)] = FuncName(funcName)
+			router[routerKey] = append(router[routerKey], FuncName(funcName))
 		}
 	}
 

@@ -133,12 +133,12 @@ func run() {
 
 				routePath := GetRouteEvent(object, "UPDATE")
 
-				// TODO: support multiple func per routePath here
-				err := app.Invoke(app.Routes[routePath], []byte(string(msg.Value)))
-
-				if err != nil {
-					app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
-					return
+				for _, fn := range app.Routes[routePath] {
+					err := app.Invoke(fn, []byte(string(msg.Value)))
+					if err != nil {
+						app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
+						return
+					}
 				}
 			}()
 		case kafka.PartitionEOF:
