@@ -193,7 +193,7 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	topic := fmt.Sprintf("%s_%s", p.app.GetString("app_name"), write.Object)
+	topic := fmt.Sprintf("%s_%s", p.app.GetString("app_name"), write.Topic)
 	for key, value := range write.Data {
 		p.produceChan <- &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
@@ -205,8 +205,8 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type WriteRequest struct {
-	Object string                     `json:"object"`
-	Data   map[string]json.RawMessage `json:"data"`
+	Topic string                     `json:"topic"`
+	Data  map[string]json.RawMessage `json:"data"`
 }
 
 func refreshMetadata(consumer *kafka.Consumer, logger *log.Entry) {
