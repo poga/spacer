@@ -46,7 +46,6 @@ func run() {
 					app.Log.Debugf("Delivered message to topic %s [%d] at offset %v",
 						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 				}
-				return
 			default:
 				app.Log.Debugf("Ignored event: %s", ev)
 			}
@@ -68,23 +67,12 @@ func run() {
 		"go.application.rebalance.enable": true,
 		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
 		"metadata.max.age.ms":             1000,
-		"enable.auto.commit":              false,
 	})
 	if err != nil {
 		app.Log.Fatal("Failed to create consumer", err)
 	}
 
-	// TODO: lock this or use goroutine
-	lastProcessedMessages := make(map[string]*kafka.Message)
-	defer func() {
-		for _, msg := range lastProcessedMessages {
-			_, err := consumer.CommitMessage(msg)
-			if err != nil {
-				app.Log.Fatal(err)
-			}
-		}
-		consumer.Close()
-	}()
+	defer consumer.Close()
 
 	err = consumer.SubscribeTopics([]string{app.Subscription()}, nil)
 	if err != nil {
@@ -132,7 +120,6 @@ func run() {
 
 			if _, ok := app.Routes[routePath]; !ok {
 				app.Log.Debugf("Route not found")
-				lastProcessedMessages[*e.TopicPartition.Topic] = e
 				continue
 			}
 
@@ -146,18 +133,13 @@ func run() {
 
 				routePath := GetRouteEvent(object, "UPDATE")
 
+				// TODO: support multiple func per routePath here
 				err := app.Invoke(app.Routes[routePath], []byte(string(msg.Value)))
 
 				if err != nil {
 					app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
 					return
 				}
-				_, err = consumer.CommitMessage(msg)
-				if err != nil {
-					app.Log.Errorf("Commit Error: %v %v", msg, err)
-					return
-				}
-				lastProcessedMessages[*e.TopicPartition.Topic] = e
 			}()
 		case kafka.PartitionEOF:
 			app.Log.Debugf("Reached %v", e)
