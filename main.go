@@ -14,8 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const CONCURRENT_FUNC = 5000
-
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
@@ -94,8 +92,6 @@ func run() {
 	// periodically refresh metadata to know if there's any new topic created
 	go refreshMetadata(consumer, app.Log)
 
-	runFunc := make(chan *kafka.Message, CONCURRENT_FUNC)
-
 	// start the consumer loop
 	for run {
 		ev := consumer.Poll(100)
@@ -123,24 +119,13 @@ func run() {
 				continue
 			}
 
-			// block when exceed CONCURRENT_FUNC
-			runFunc <- e
-
-			go func() {
-				msg := <-runFunc
-				parts := strings.Split(*msg.TopicPartition.Topic, "_")
-				object := parts[1]
-
-				routePath := GetRouteEvent(object, "UPDATE")
-
-				for _, fn := range app.Routes[routePath] {
-					err := app.Invoke(fn, []byte(string(msg.Value)))
-					if err != nil {
-						app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
-						return
-					}
+			for _, fn := range app.Routes[routePath] {
+				err := app.Invoke(fn, []byte(string(e.Value)))
+				if err != nil {
+					app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
+					return
 				}
-			}()
+			}
 		case kafka.PartitionEOF:
 			app.Log.Debugf("Reached %v", e)
 		case kafka.Error:
