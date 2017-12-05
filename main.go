@@ -108,24 +108,7 @@ func run() {
 		case *kafka.Message:
 			app.Log.Infof("Message Received %s", e.TopicPartition)
 
-			parts := strings.Split(*e.TopicPartition.Topic, "_")
-			object := parts[1]
-
-			routePath := GetRouteEvent(object, "UPDATE")
-			app.Log.Debugf("Looking up route %s", routePath)
-
-			if _, ok := app.Routes[routePath]; !ok {
-				app.Log.Debugf("Route not found")
-				continue
-			}
-
-			for _, fn := range app.Routes[routePath] {
-				err := app.Invoke(fn, []byte(string(e.Value)))
-				if err != nil {
-					app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
-					return
-				}
-			}
+			app.Invoke(e)
 		case kafka.PartitionEOF:
 			app.Log.Debugf("Reached %v", e)
 		case kafka.Error:

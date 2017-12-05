@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -16,8 +17,9 @@ import (
 
 type Application struct {
 	*viper.Viper
-	Log    *log.Entry
-	Routes map[Event][]FuncName
+	Log        *log.Entry
+	Routes     map[Event][]FuncName
+	WorkerPool *Pool
 }
 
 type Event string
@@ -53,9 +55,10 @@ func NewApplication() (*Application, error) {
 	}
 
 	logger := log.WithFields(log.Fields{"app_name": config.GetString("app_name")})
-	app := &Application{config, logger, router}
+	app := &Application{config, logger, router, nil}
+	app.WorkerPool = NewPool(app.InvokeFunc)
 
-	err = ValidateApp(app)
+	err = validateApp(app)
 	if err != nil {
 		return nil, errors.Wrap(err, "application validation failed")
 	}
@@ -63,7 +66,7 @@ func NewApplication() (*Application, error) {
 	return app, nil
 }
 
-func ValidateApp(app *Application) error {
+func validateApp(app *Application) error {
 	if strings.Contains(app.Name(), "_") {
 		return fmt.Errorf("app.name %s cannot contains \"_\"", app.GetString("app_name"))
 	}
@@ -99,7 +102,13 @@ func (app *Application) Name() string {
 	return app.GetString("app_name")
 }
 
-func (app *Application) Invoke(fn FuncName, data []byte) error {
+func (app *Application) Invoke(msg *kafka.Message) {
+	go func() {
+		app.WorkerPool.RunTask(msg)
+	}()
+}
+
+func (app *Application) invoke(fn FuncName, data []byte) error {
 	app.Log.Infof("Invoking %s", string(fn))
 	client := &http.Client{}
 	req, err := http.NewRequest(
@@ -134,5 +143,27 @@ func (app *Application) Invoke(fn FuncName, data []byte) error {
 	if msg, ok := ret["error"]; ok {
 		return fmt.Errorf("Function returned error: %s", msg)
 	}
+	return nil
+}
+
+// For WorkerPool
+func (app *Application) InvokeFunc(msg *kafka.Message) error {
+	parts := strings.Split(*msg.TopicPartition.Topic, "_")
+	objectType := WorkerObjectType(parts[1])
+	routePath := GetRouteEvent(string(objectType), "UPDATE")
+	app.Log.Debugf("Looking up route %s", routePath)
+
+	if _, ok := app.Routes[routePath]; !ok {
+		app.Log.Debugf("Route not found")
+	}
+
+	for _, fn := range app.Routes[routePath] {
+		err := app.invoke(fn, []byte(string(msg.Value)))
+		if err != nil {
+			app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
+			return err
+		}
+	}
+
 	return nil
 }
