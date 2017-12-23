@@ -15,6 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const CONFIG_VERSION = 1
+
 type Application struct {
 	*viper.Viper
 	Log        *log.Entry
@@ -67,6 +69,9 @@ func NewApplication() (*Application, error) {
 }
 
 func validateApp(app *Application) error {
+	if app.GetInt("spacer") != CONFIG_VERSION {
+		return fmt.Errorf("Expect config version %d, got %d", CONFIG_VERSION, app.GetInt("spacer"))
+	}
 	if strings.Contains(app.Name(), "_") {
 		return fmt.Errorf("app.name %s cannot contains \"_\"", app.GetString("app_name"))
 	}
