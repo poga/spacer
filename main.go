@@ -1,8 +1,6 @@
 package main
 
-import (
-	log "github.com/sirupsen/logrus"
-)
+import "log"
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
