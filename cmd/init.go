@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	spacer "github.com/poga/spacer/pkg"
 	log "github.com/sirupsen/logrus"
@@ -33,8 +35,16 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		return
 		// 2. add spacer.yml
+		spacerYAML, err := spacer.Asset("spacer.example.yml")
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = ioutil.WriteFile(filepath.Join(targetDir, "spacer.yml"), spacerYAML, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
 		// 3. hello world function
 	},
 }

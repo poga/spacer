@@ -1,0 +1,15 @@
+spacer: 1
+
+app_name: HelloWorld
+
+routes:
+
+# #########################################################
+# system configs
+
+brokers:
+  - localhost:9092
+
+# delegator: http://localhost:9064
+# write_proxy_listen: :9065
+
