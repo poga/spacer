@@ -11,3 +11,11 @@ import:
   version: ^0.0.1
 - package: github.com/spf13/viper
   version: ^1.0.0
+- package: github.com/hpcloud/tail
+  version: ^1.0.0
+  subpackages:
+  - '...'
+- package: github.com/jteeuwen/go-bindata
+  version: ^3.0.7
+  subpackages:
+  - '...'

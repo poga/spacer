@@ -1,5 +1,5 @@
-hash: 5bfb838fbc405741d8fe79dbfb460170d40019c5e6c72d485bd9681aa86c32c9
-updated: 2017-11-30T03:22:19.330031712+08:00
+hash: fcb654e4860e407e45588c1975aac06c78a4de5f19a32b1951ee472343649152
+updated: 2017-12-26T02:09:09.295202081+08:00
 imports:
 - name: github.com/confluentinc/confluent-kafka-go
   version: f696f02dcbb04d95b103c5b848bb15f749a996f7
@@ -18,18 +18,26 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/hpcloud/tail
+  version: a30252cb686a21eb2d0b98132633053ec2f7f1e5
+  subpackages:
+  - '...'
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jteeuwen/go-bindata
+  version: bbd0c6e271208dce66d8fda4bc536453cd27fc4a
+  subpackages:
+  - '...'
 - name: github.com/magiconair/properties
   version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
 - name: github.com/mitchellh/mapstructure
   version: 06020f85339e21b2478f756a78e295255ffa4d6a
 - name: github.com/pelletier/go-toml
-  version: 4e9e0ee19b60b13eb79915933f44d8ed5f268bdd
+  version: 0131db6d737cfbbfb678f8b7d92e55e27ce46224
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/sirupsen/logrus
-  version: 95cd2b9c79aa5e72ab0bc69b7ccc2be15bf850f6
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: github.com/spf13/afero
   version: 8d919cbe7e2627e417f3e45c3c0e489a5b7e2536
   subpackages:
@@ -45,16 +53,16 @@ imports:
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: golang.org/x/crypto
-  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
+  version: d585fd2cc9195196078f516b69daff6744ef5e84
   subpackages:
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 316e9227019baa6ea3f76ea21538bab101fd1182
+  version: 83801418e1b59fb1880e363299581ee543af32ca
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 572a2b141f625f4360cf42a41a43622067e0510b
+  version: eb22672bea55af56d225d4e35405f4d2e9f062a0
   subpackages:
   - transform
   - unicode/norm
