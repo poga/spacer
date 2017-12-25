@@ -9,13 +9,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var targetDir string
 var source string
 
 var initCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init [targetDir]",
 	Short: "init a new spacer project",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		targetDir := args[0]
 		// TODO:
 		// 1. write nginx configs to target directory
 		if targetDir == "" {
@@ -39,7 +40,6 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	initCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to init a new spacer project")
 	initCmd.Flags().StringVarP(&source, "source", "s", "", "Create symlink from source directory instead of copying to target directory. Useful for development")
 	RootCmd.AddCommand(initCmd)
 }
