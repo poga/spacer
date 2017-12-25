@@ -3,7 +3,9 @@ package cmd
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	spacer "github.com/poga/spacer/pkg"
 	log "github.com/sirupsen/logrus"
@@ -31,25 +33,43 @@ var initCmd = &cobra.Command{
 			}
 			return
 		}
-		err := spacer.RestoreAssets(targetDir, "nginx")
+		err := spacer.RestoreAssets(targetDir, "app")
 		if err != nil {
 			log.Fatal(err)
 		}
 		// 2. add spacer.yml
-		spacerYAML, err := spacer.Asset("spacer.example.yml")
+		err = writeFile(filepath.Join(targetDir, "spacer.yml"), "spacer.example.yml")
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = ioutil.WriteFile(filepath.Join(targetDir, "spacer.yml"), spacerYAML, 0644)
+		// 3. add .gitignore
+		err = writeFile(filepath.Join(targetDir, ".gitignore"), "appignore")
 		if err != nil {
 			log.Fatal(err)
 		}
+		// 4. git init
+		out, err := exec.Command("git", "init").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Info(strings.Trim(string(out), "\n"))
 		return
-		// 3. hello world function
 	},
 }
 
 func init() {
 	initCmd.Flags().StringVarP(&source, "source", "s", "", "Create symlink from source directory instead of copying to target directory. Useful for development")
 	RootCmd.AddCommand(initCmd)
+}
+
+func writeFile(to string, name string) error {
+	data, err := spacer.Asset("appignore")
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(to, data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
