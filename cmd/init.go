@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"os"
+
 	spacer "github.com/poga/spacer/pkg"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
 )
 
 var targetDir string
-var shallow bool
+var source string
 
 var initCmd = &cobra.Command{
 	Use:   "init",
@@ -14,11 +18,21 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO:
 		// 1. write nginx configs to target directory
-		if !shallow {
-			spacer.RestoreAssets(targetDir, "nginx")
+		if targetDir == "" {
+			log.Fatalf("Target Directory is Required")
+		}
+		if source != "" {
+			err := os.Symlink(source, targetDir)
+			if err != nil {
+				log.Fatal(err)
+			}
 			return
 		}
-		// TODO: shallow - symlink to nginx configs in the repo
+		err := spacer.RestoreAssets(targetDir, "nginx")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
 		// 2. add spacer.yml
 		// 3. hello world function
 	},
@@ -26,6 +40,6 @@ var initCmd = &cobra.Command{
 
 func init() {
 	initCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to init a new spacer project")
-	initCmd.Flags().BoolVarP(&shallow, "shallow", "s", false, "Create symlink instead of copying project template to target directory. Useful for development")
+	initCmd.Flags().StringVarP(&source, "source", "s", "", "Create symlink from source directory instead of copying to target directory. Useful for development")
 	RootCmd.AddCommand(initCmd)
 }
