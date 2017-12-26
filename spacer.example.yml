@@ -3,6 +3,9 @@ spacer: 1
 appName: HelloWorld
 
 routes:
+  example_topic:
+    UPDATE:
+      - foo
 
 # #########################################################
 # system configs
