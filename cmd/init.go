@@ -20,7 +20,10 @@ var initCmd = &cobra.Command{
 	Short: "init a new spacer project",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		targetDir := args[0]
+		targetDir, err := filepath.Abs(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 		// TODO:
 		// 1. write nginx configs to target directory
 		if targetDir == "" {
@@ -33,7 +36,7 @@ var initCmd = &cobra.Command{
 			}
 			return
 		}
-		err := spacer.RestoreAssets(targetDir, "app")
+		err = spacer.RestoreAssets(targetDir, "app")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,13 +45,23 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		// 3. add .gitignore
+
 		err = writeFile(filepath.Join(targetDir, ".gitignore"), "appignore")
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		err = writeFile(filepath.Join(targetDir, "nginx.conf"), "nginx.conf")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
 		// 4. git init
-		out, err := exec.Command("git", "init").Output()
+		out, err := exec.Command("git", "init", targetDir).Output()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,7 +76,7 @@ func init() {
 }
 
 func writeFile(to string, name string) error {
-	data, err := spacer.Asset("appignore")
+	data, err := spacer.Asset(name)
 	if err != nil {
 		return err
 	}
