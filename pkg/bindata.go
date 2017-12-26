@@ -5,6 +5,7 @@
 // app/spacer/run.lua
 // app/spacer/service.lua
 // app/spacer/trace.lua
+// bin/start.sh
 // spacer.example.yml
 // appignore
 // nginx.conf
@@ -110,6 +111,24 @@ func appSpacerServiceLua() (*asset, error) {
 func appSpacerTraceLua() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/app/spacer/trace.lua"
 	name := "app/spacer/trace.lua"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// binStartSh reads file data from disk. It returns an error on failure.
+func binStartSh() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/start.sh"
+	name := "bin/start.sh"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -235,6 +254,7 @@ var _bindata = map[string]func() (*asset, error){
 	"app/spacer/run.lua": appSpacerRunLua,
 	"app/spacer/service.lua": appSpacerServiceLua,
 	"app/spacer/trace.lua": appSpacerTraceLua,
+	"bin/start.sh": binStartSh,
 	"spacer.example.yml": spacerExampleYml,
 	"appignore": appignore,
 	"nginx.conf": nginxConf,
@@ -290,6 +310,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		}},
 	}},
 	"appignore": &bintree{appignore, map[string]*bintree{}},
+	"bin": &bintree{nil, map[string]*bintree{
+		"start.sh": &bintree{binStartSh, map[string]*bintree{}},
+	}},
 	"nginx.conf": &bintree{nginxConf, map[string]*bintree{}},
 	"spacer.example.yml": &bintree{spacerExampleYml, map[string]*bintree{}},
 }}

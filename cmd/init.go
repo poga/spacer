@@ -39,6 +39,10 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		err = spacer.RestoreAssets(targetDir, "bin")
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		err = series([]func() error{
 			func() error { return writeFile(filepath.Join(targetDir, "spacer.yml"), "spacer.example.yml") },
