@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	spacer "github.com/poga/spacer/pkg"
 	log "github.com/sirupsen/logrus"
@@ -20,12 +19,12 @@ var initCmd = &cobra.Command{
 	Short: "init a new spacer project",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Initialize a spacer project from defined template and setup directory structure for nginx
 		targetDir, err := filepath.Abs(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
-		// TODO:
-		// 1. write nginx configs to target directory
+
 		if targetDir == "" {
 			log.Fatalf("Target Directory is Required")
 		}
@@ -40,37 +39,22 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		// 2. add spacer.yml
-		err = writeFile(filepath.Join(targetDir, "spacer.yml"), "spacer.example.yml")
+
+		err = series([]func() error{
+			func() error { return writeFile(filepath.Join(targetDir, "spacer.yml"), "spacer.example.yml") },
+			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
+			func() error { return writeFile(filepath.Join(targetDir, "nginx.conf"), "nginx.conf") },
+			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
+			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = writeFile(filepath.Join(targetDir, ".gitignore"), "appignore")
+		_, err = exec.Command("git", "init", targetDir).Output()
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		err = writeFile(filepath.Join(targetDir, "nginx.conf"), "nginx.conf")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// 4. git init
-		out, err := exec.Command("git", "init", targetDir).Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Info(strings.Trim(string(out), "\n"))
 		return
 	},
 }
@@ -88,6 +72,16 @@ func writeFile(to string, name string) error {
 	err = ioutil.WriteFile(to, data, 0644)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func series(funcs []func() error) error {
+	for _, f := range funcs {
+		err := f()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
