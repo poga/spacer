@@ -6,16 +6,13 @@ ngx.req.read_body()
 local path = ngx.var.uri
 local ok, func = pcall(require, path)
 
--- ngx.log(ngx.ERR, "running " .. path .. " " , ngx.is_subrequest, " ", ngx.req.get_headers()["X-SPACER-TRACE-TOKEN"])
-
 if not ok then
     ngx.log(ngx.ERR, func)
     if string.find(func, "not found") then
         ngx.status = ngx.HTTP_NOT_FOUND
-        ngx.say(json.encode({["error"] = "module " .. path .. " not found"}))
-        return ngx.exit(ngx.HTTP_OK)
+    else
+        ngx.status = ngx.ERROR
     end
-    ngx.status = ngx.ERROR
     ngx.say(json.encode({["error"] = func}))
     return ngx.exit(ngx.HTTP_OK)
 end
