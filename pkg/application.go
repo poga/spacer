@@ -207,7 +207,7 @@ func (app *Application) Start() error {
 		app.Log.Fatal(err)
 	}
 	go http.ListenAndServe(app.GetString("writeProxyListen"), writeProxy)
-	app.Log.Infof("Write Proxy Started: %s", app.GetString("writeProxyListen"))
+	app.Log.WithField("listen", app.GetString("writeProxyListen")).Infof("Write Proxy Started")
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":               strings.Join(app.Brokers(), ","),
@@ -227,7 +227,7 @@ func (app *Application) Start() error {
 	if err != nil {
 		app.Log.Fatal("Failed to subscribe topics %v, %s", app.Subscription(), err)
 	}
-	app.Log.Infof("Consumer Started")
+	app.Log.WithField("groupID", app.ConsumerGroupID()).Infof("Consumer Started")
 
 	// close consumers when user press ctrl+c
 	run := true
