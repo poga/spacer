@@ -51,8 +51,9 @@ var initCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		_, err = exec.Command("git", "init", targetDir).Output()
+		out, err := exec.Command("git", "init", targetDir).CombinedOutput()
 		if err != nil {
+			log.Infof(string(out))
 			log.Fatal(err)
 		}
 		return
