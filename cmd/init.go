@@ -60,6 +60,11 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		err = os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
 		// 4. git init
 		out, err := exec.Command("git", "init", targetDir).Output()
 		if err != nil {
