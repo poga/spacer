@@ -10,7 +10,14 @@ local ok, func = pcall(require, path)
 
 if not ok then
     ngx.log(ngx.ERR, func)
-    return ngx.exit(500)
+    if string.find(func, "not found") then
+        ngx.status = ngx.HTTP_NOT_FOUND
+        ngx.say(json.encode({["error"] = "module " .. path .. " not found"}))
+        return ngx.exit(ngx.HTTP_OK)
+    end
+    ngx.status = ngx.ERROR
+    ngx.say(json.encode({["error"] = func}))
+    return ngx.exit(ngx.HTTP_OK)
 end
 
 local body = ngx.req.get_body_data()
