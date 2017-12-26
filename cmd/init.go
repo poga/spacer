@@ -12,8 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var source string
-
 var initCmd = &cobra.Command{
 	Use:   "init [targetDir]",
 	Short: "init a new spacer project",
@@ -27,13 +25,6 @@ var initCmd = &cobra.Command{
 
 		if targetDir == "" {
 			log.Fatalf("Target Directory is Required")
-		}
-		if source != "" {
-			err := os.Symlink(source, targetDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-			return
 		}
 
 		err = series([]func() error{
@@ -59,7 +50,6 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	initCmd.Flags().StringVarP(&source, "source", "s", "", "Create symlink from source directory instead of copying to target directory. Useful for development")
 	RootCmd.AddCommand(initCmd)
 }
 
