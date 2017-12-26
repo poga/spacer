@@ -9,7 +9,7 @@ local ok, func = pcall(require, path)
 -- ngx.log(ngx.ERR, "running " .. path .. " " , ngx.is_subrequest, " ", ngx.req.get_headers()["X-SPACER-TRACE-TOKEN"])
 
 if not ok then
-    ngx.log(ngx.ERR, res)
+    ngx.log(ngx.ERR, func)
     return ngx.exit(500)
 end
 
