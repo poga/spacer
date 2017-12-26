@@ -1,6 +1,6 @@
 spacer: 1
 
-app_name: HelloWorld
+appName: HelloWorld
 
 routes:
 
@@ -11,5 +11,6 @@ brokers:
   - localhost:9092
 
 # delegator: http://localhost:9064
-# write_proxy_listen: :9065
+# writeProxyListen: :9065
+# consumerGroupPrefix: spacer
 

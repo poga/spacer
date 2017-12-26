@@ -30,15 +30,15 @@ type Application struct {
 type Event string
 type FuncName string
 
-func NewApplication() (*Application, error) {
+func NewApplication(configPath string, configName string) (*Application, error) {
 	config := viper.New()
-	config.AddConfigPath(".")
-	config.SetConfigName("spacer")
+	config.AddConfigPath(configPath)
+	config.SetConfigName(configName)
 
 	// default configs
-	config.SetDefault("consumer_group_prefix", "spacer")
+	config.SetDefault("consumerGroupPrefix", "spacer")
 	config.SetDefault("delegator", "http://localhost:9064")
-	config.SetDefault("write_proxy_listen", ":9065")
+	config.SetDefault("writeProxyListen", ":9065")
 
 	err := config.ReadInConfig()
 	if err != nil {
@@ -59,7 +59,7 @@ func NewApplication() (*Application, error) {
 		}
 	}
 
-	logger := log.WithFields(log.Fields{"app_name": config.GetString("app_name")})
+	logger := log.WithFields(log.Fields{"appName": config.GetString("appName")})
 	app := &Application{config, logger, router, nil}
 	app.WorkerPool = NewPool(app.InvokeFunc)
 
@@ -76,7 +76,7 @@ func validateApp(app *Application) error {
 		return fmt.Errorf("Expect config version %d, got %d", CONFIG_VERSION, app.GetInt("spacer"))
 	}
 	if strings.Contains(app.Name(), "_") {
-		return fmt.Errorf("app.name %s cannot contains \"_\"", app.GetString("app_name"))
+		return fmt.Errorf("app.name %s cannot contains \"_\"", app.GetString("appName"))
 	}
 
 	return nil
@@ -91,7 +91,7 @@ func GetAbsoluteFuncPath(delegator string, funcName string) FuncName {
 }
 
 func (app *Application) ConsumerGroupID() string {
-	return strings.Join([]string{app.GetString("consumer_group_prefix"), app.Name()}, "-")
+	return strings.Join([]string{app.GetString("consumerGroupPrefix"), app.Name()}, "-")
 }
 
 func (app *Application) Brokers() []string {
@@ -107,7 +107,7 @@ func (app *Application) GetObjectTopic(objectType string) string {
 }
 
 func (app *Application) Name() string {
-	return app.GetString("app_name")
+	return app.GetString("appName")
 }
 
 func (app *Application) Invoke(msg *kafka.Message) {
@@ -125,7 +125,7 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 		bytes.NewReader(data),
 	)
 
-	req.Header.Set("User-Agent", "Spacer_Event_Router")
+	req.Header.Set("User-Agent", "SpacerEventRouter")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -206,8 +206,8 @@ func (app *Application) Start() error {
 	if err != nil {
 		app.Log.Fatal(err)
 	}
-	go http.ListenAndServe(app.GetString("write_proxy_listen"), writeProxy)
-	app.Log.Infof("Write Proxy Started: %s", app.GetString("write_proxy_listen"))
+	go http.ListenAndServe(app.GetString("writeProxyListen"), writeProxy)
+	app.Log.Infof("Write Proxy Started: %s", app.GetString("writeProxyListen"))
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":               strings.Join(app.Brokers(), ","),

@@ -1,24 +1,33 @@
 package cmd
 
 import (
+	"path/filepath"
+
 	spacer "github.com/poga/spacer/pkg"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
 
-var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "start spacer",
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: also start nginx
-		// TODO: tail error.log and access.log
-		// TODO: parse error.log and access.log?
+var configName string
+var consumerGroupID string
 
-		// TODO: check kafka and openresty exists in path
-		app, err := spacer.NewApplication()
+var startCmd = &cobra.Command{
+	Use:   "start [flags] [projectDirectory]",
+	Short: "Start a spacer router for given project",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectDir, err := filepath.Abs(args[0])
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		app, err := spacer.NewApplication(projectDir, configName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if consumerGroupID != "" {
+			app.Set("consumerGroupPrefix", consumerGroupID)
 		}
 
 		err = app.Start()
@@ -29,5 +38,7 @@ var startCmd = &cobra.Command{
 }
 
 func init() {
+	startCmd.Flags().StringVarP(&configName, "config", "c", "spacer", "Config Filename")
+	startCmd.Flags().StringVarP(&consumerGroupID, "groupID", "g", "", "Consumer Group ID")
 	RootCmd.AddCommand(startCmd)
 }
