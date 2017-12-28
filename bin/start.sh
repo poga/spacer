@@ -3,9 +3,12 @@ trap "kill 0" EXIT
 
 openresty -p `pwd`/ -c nginx.conf &
 sleep 1
-tail -0 -f logs/access.log &
-tail -0 -f logs/error.log | awk '
-  /[error]/ {print "\033[31m" $0 "\033[39m"}
+tail -0f logs/access.log | awk '
+  /\[400\]/{print "\033[33m" $0 "\033[39m"; next}
+  /\[500\]/{print "\033[33m" $0 "\033[39m"; next}
+  /\[404\]/{print "\033[33m" $0 "\033[39m"; next}
+  1 {print "\033[32m" $0 "\033[39m"; next}
 ' &
+tail -0f logs/error.log | awk '{print "\033[31m" $0 "\033[39m"}' &
 
 wait
