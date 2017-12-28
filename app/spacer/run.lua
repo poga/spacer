@@ -1,6 +1,8 @@
 local json = require "cjson"
 local routes = require "routes"
 
+local env = os.getenv('SPACER_ENV')
+
 ngx.req.read_body()
 
 local path = ngx.var.uri
@@ -29,7 +31,9 @@ if not ok then
     else
         ngx.status = ngx.ERROR
     end
-    -- TODO: don't return error message in production
+    if env == 'production' then
+        func = 'Internal Server Error'
+    end
     ngx.say(json.encode({["error"] = func}))
     return ngx.exit(ngx.HTTP_OK)
 end
@@ -54,14 +58,19 @@ local ok, ret = pcall(func, event, context)
 
 if not ok then
     if ret.t == "error" then -- user error
+        ngx.status = ngx.HTTP_BAD_REQUEST
         ngx.say(json.encode({["error"] = ret.err}))
         ngx.log(ngx.ERR, ret.err)
-        return ngx.exit(200)
+        return ngx.exit(ngx.HTTP_OK)
     else -- unknown exception
         -- TODO: don't return exception in production
+        if env == 'production' then
+            ret = 'We\'re sorry, something went wrong'
+        end
+        ngx.status = ngx.ERROR
         ngx.say(json.encode({["error"] = ret}))
         ngx.log(ngx.ERR, ret)
-        return ngx.exit(200)
+        return ngx.exit(ngx.HTTP_OK)
     end
 end
 
