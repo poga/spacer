@@ -157,7 +157,7 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 // For WorkerPool
 func (app *Application) InvokeFunc(msg *kafka.Message) error {
 	parts := strings.Split(*msg.TopicPartition.Topic, "_")
-	objectType := WorkerObjectType(parts[1])
+	objectType := parts[1]
 	routePath := GetRouteEvent(string(objectType), "UPDATE")
 	app.Log.Debugf("Looking up route %s", routePath)
 

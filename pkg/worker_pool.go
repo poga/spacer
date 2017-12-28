@@ -1,57 +1,43 @@
 package spacer
 
 import (
-	"strings"
+	"fmt"
 	"sync"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-type WorkerObjectType string
-type WorkerKey string
 type Work func(*kafka.Message) error
 
 type Pool struct {
-	workers map[WorkerObjectType]map[WorkerKey]*Worker
+	workers map[string]*Worker
 	Work    Work
 	*sync.RWMutex
 }
 
 func NewPool(work Work) *Pool {
-	p := Pool{make(map[WorkerObjectType]map[WorkerKey]*Worker), work, &sync.RWMutex{}}
+	p := Pool{make(map[string]*Worker), work, &sync.RWMutex{}}
 
 	return &p
 }
 
 func (p *Pool) RunTask(msg *kafka.Message) {
-	parts := strings.Split(*msg.TopicPartition.Topic, "_")
-	objectType := parts[1]
-
-	worker := p.getWorker(WorkerObjectType(objectType), WorkerKey(string(msg.Key)))
+	workerKey := fmt.Sprintf("%s_%s", *msg.TopicPartition.Topic, string(msg.Key))
+	worker := p.getWorker(workerKey)
 	worker.TaskChan <- msg
 }
 
-func (p *Pool) getWorker(objectType WorkerObjectType, key WorkerKey) *Worker {
+func (p *Pool) getWorker(workerKey string) *Worker {
 	p.RLock()
-	_, ok := p.workers[objectType]
+	_, ok := p.workers[workerKey]
 	p.RUnlock()
 	if !ok {
 		p.Lock()
-		p.workers[objectType] = make(map[WorkerKey]*Worker)
+		p.workers[workerKey] = NewWorker(p.Work)
 		p.Unlock()
-	}
-	p.RLock()
-	w, ok := p.workers[objectType][key]
-	p.RUnlock()
-	if !ok {
-		p.Lock()
-		w := NewWorker(p.Work)
-		p.workers[objectType][key] = w
-		p.Unlock()
-		return w
 	}
 
-	return w
+	return p.workers[workerKey]
 }
 
 type Worker struct {
