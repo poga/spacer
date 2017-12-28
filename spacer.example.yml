@@ -2,7 +2,7 @@ spacer: 1
 
 appName: HelloWorld
 
-routes:
+events:
   example_topic:
     UPDATE:
       - foo

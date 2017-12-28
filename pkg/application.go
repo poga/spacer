@@ -47,7 +47,7 @@ func NewApplication(configPath string, configName string) (*Application, error) 
 
 	router := make(map[Event][]FuncName)
 	// load routes
-	routeConfig := config.Sub("routes")
+	routeConfig := config.Sub("events")
 	for _, objectAndEvent := range routeConfig.AllKeys() {
 		parts := strings.Split(objectAndEvent, ".")
 		object := parts[0]
