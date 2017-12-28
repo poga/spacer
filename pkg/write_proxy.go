@@ -33,7 +33,7 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	topic := fmt.Sprintf("%s_%s", p.app.GetString("app_name"), write.Topic)
+	topic := fmt.Sprintf("%s_%s", p.app.GetString("appName"), write.Topic)
 	for key, value := range write.Entries {
 		p.produceChan <- &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
