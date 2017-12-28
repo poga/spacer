@@ -17,7 +17,7 @@ for i, route in ipairs(routes) do
 end
 
 if module == nil then
-    ngx.status = ngx.HTTP_NOT_FOUND
+    ngx.status = 404
     ngx.say(json.encode({["error"] = "not found"}))
     return ngx.exit(ngx.HTTP_OK)
 end
@@ -27,9 +27,9 @@ if not ok then
     -- `func` will be the error message if error occured
     ngx.log(ngx.ERR, func)
     if string.find(func, "not found") then
-        ngx.status = ngx.HTTP_NOT_FOUND
+        ngx.status = 404
     else
-        ngx.status = ngx.ERROR
+        ngx.status = 500
     end
     if env == 'production' then
         func = 'Internal Server Error'
@@ -58,7 +58,7 @@ local ok, ret = pcall(func, event, context)
 
 if not ok then
     if ret.t == "error" then -- user error
-        ngx.status = ngx.HTTP_BAD_REQUEST
+        ngx.status = 400
         ngx.say(json.encode({["error"] = ret.err}))
         ngx.log(ngx.ERR, ret.err)
         return ngx.exit(ngx.HTTP_OK)
@@ -67,7 +67,7 @@ if not ok then
         if env == 'production' then
             ret = 'We\'re sorry, something went wrong'
         end
-        ngx.status = ngx.ERROR
+        ngx.status = 500
         ngx.say(json.encode({["error"] = ret}))
         ngx.log(ngx.ERR, ret)
         return ngx.exit(ngx.HTTP_OK)
