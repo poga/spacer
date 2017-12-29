@@ -2,7 +2,9 @@ trap "exit" INT TERM ERR
 trap "kill 0" EXIT
 
 openresty -p `pwd`/ -c nginx.conf &
-sleep 1
+touch logs/access.log
+touch logs/error.log
+
 tail -0f logs/access.log | awk '
   /\[400\]/{print "\033[33m" $0 "\033[39m"; next}
   /\[500\]/{print "\033[33m" $0 "\033[39m"; next}
