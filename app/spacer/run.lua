@@ -52,13 +52,13 @@ local ok, ret = pcall(func, event, context)
 if not ok then
     if ret.t == "error" then -- user error
         ngx.log(ngx.ERR, ret.err)
-        return reect(400, {["error"] = ret.err})
+        return reject(400, {["error"] = ret.err})
     else -- unknown exception
         ngx.log(ngx.ERR, ret)
         if env == 'production' then
             ret = 'We\'re sorry, something went wrong'
         end
-        return reect(500, {["error"] = ret})
+        return reject(500, {["error"] = ret})
     end
 end
 
