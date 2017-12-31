@@ -1,8 +1,8 @@
 local _R = {
-    {"GET", "/say_hello", "hello"}
+    {"POST", "/say_hello", "hello"}
 }
 
-local route = function (method, path)
+local router = function (method, path)
     local module = nil
     for i, route in ipairs(_R) do
         if route[1] == method and route[2] == path then
@@ -12,4 +12,4 @@ local route = function (method, path)
     return module
 end
 
-return route
+return router

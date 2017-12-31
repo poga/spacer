@@ -13,7 +13,7 @@ var configName string
 var consumerGroupID string
 
 var startCmd = &cobra.Command{
-	Use:   "start [flags] [projectDirectory]",
+	Use:   "start [projectDirectory]",
 	Short: "Start a spacer router for given project",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

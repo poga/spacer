@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -110,7 +109,7 @@ func (app *Application) Name() string {
 	return app.GetString("appName")
 }
 
-func (app *Application) Invoke(msg *kafka.Message) {
+func (app *Application) Invoke(msg Message) {
 	go func() {
 		app.WorkerPool.RunTask(msg)
 	}()
@@ -151,12 +150,13 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 	if msg, ok := ret["error"]; ok {
 		return fmt.Errorf("Function returned error: %s", msg)
 	}
+	app.Log.Debugf("Invoke %s complete", string(fn))
 	return nil
 }
 
 // For WorkerPool
-func (app *Application) InvokeFunc(msg *kafka.Message) error {
-	parts := strings.Split(*msg.TopicPartition.Topic, "_")
+func (app *Application) InvokeFunc(msg Message) error {
+	parts := strings.Split(*msg.Topic, "_")
 	objectType := parts[1]
 	routePath := GetRouteEvent(string(objectType), "UPDATE")
 	app.Log.Debugf("Looking up route %s", routePath)
@@ -178,26 +178,14 @@ func (app *Application) InvokeFunc(msg *kafka.Message) error {
 
 func (app *Application) Start() error {
 	// create a producer
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": strings.Join(app.Brokers(), ",")})
+	producer, err := NewKafkaProducer(app)
 	if err != nil {
 		app.Log.Fatal("Unable to create producer:", err)
 	}
 
-	// generic logging for producer
 	go func() {
-		for e := range producer.Events() {
-			switch ev := e.(type) {
-			case *kafka.Message:
-				m := ev
-				if m.TopicPartition.Error != nil {
-					app.Log.Fatal("delivery failed", m.TopicPartition.Error)
-				} else {
-					app.Log.Debugf("Delivered message to topic %s [%d] at offset %v",
-						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-				}
-			default:
-				app.Log.Debugf("Ignored event: %s", ev)
-			}
+		for m := range producer.Events() {
+			app.Log.Debugf("Delivered message to topic %s at offset %v", *m.Topic, m.Offset)
 		}
 	}()
 
@@ -209,21 +197,14 @@ func (app *Application) Start() error {
 	go http.ListenAndServe(app.GetString("writeProxyListen"), writeProxy)
 	app.Log.WithField("listen", app.GetString("writeProxyListen")).Infof("Write Proxy Started")
 
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":               strings.Join(app.Brokers(), ","),
-		"group.id":                        app.ConsumerGroupID(),
-		"session.timeout.ms":              6000,
-		"go.application.rebalance.enable": true,
-		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
-		"metadata.max.age.ms":             1000,
-	})
+	consumer, err := NewKafkaConsumer(app)
 	if err != nil {
 		app.Log.Fatal("Failed to create consumer", err)
 	}
 
 	defer consumer.Close()
 
-	err = consumer.SubscribeTopics([]string{app.Subscription()}, nil)
+	err = consumer.SubscribeTopics([]string{app.Subscription()})
 	if err != nil {
 		app.Log.Fatal("Failed to subscribe topics %v, %s", app.Subscription(), err)
 	}
@@ -245,46 +226,27 @@ func (app *Application) Start() error {
 
 	// start the consumer loop
 	for run {
-		ev := consumer.Poll(100)
-		if ev == nil {
+		msg, err := consumer.Poll(100)
+		if err != nil {
+			app.Log.Fatalf("Consumer Error %s", msg)
+		}
+		if msg == nil {
 			continue
 		}
-		switch e := ev.(type) {
-		case kafka.AssignedPartitions:
-			app.Log.Info(e)
-			consumer.Assign(e.Partitions)
-		case kafka.RevokedPartitions:
-			app.Log.Info(e)
-			consumer.Unassign()
-		case *kafka.Message:
-			app.Log.Infof("Message Received %s", e.TopicPartition)
-
-			app.Invoke(e)
-		case kafka.PartitionEOF:
-			app.Log.Debugf("Reached %v", e)
-		case kafka.Error:
-			app.Log.Fatalf("Consumer Error %s", e)
-		default:
-			app.Log.Debugf("Unknown Message %v", e)
-		}
+		app.Invoke(*msg)
 	}
 
 	return nil
 }
 
-func refreshMetadata(consumer *kafka.Consumer, logger *log.Entry) {
+func refreshMetadata(consumer LogStorageConsumer, logger *log.Entry) {
 	for {
 		time.Sleep(5 * time.Second)
-		metadata, err := consumer.GetMetadata(nil, true, 100)
+		err := consumer.GetMetadata()
 		if err != nil {
 			// somethimes it just timed out, ignore
-			logger.Warn("Unable to refresh metadata: ", err)
+			logger.Debugf("Unable to refresh metadata: %s", err)
 			continue
 		}
-		keys := []string{}
-		for k := range metadata.Topics {
-			keys = append(keys, k)
-		}
-		// logger.Info("metadata: ", keys)
 	}
 }

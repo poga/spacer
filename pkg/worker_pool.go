@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	log "github.com/sirupsen/logrus"
 )
 
-type Work func(*kafka.Message) error
+type Work func(Message) error
 
 type Pool struct {
 	workers map[string]*Worker
@@ -21,17 +21,19 @@ func NewPool(work Work) *Pool {
 	return &p
 }
 
-func (p *Pool) RunTask(msg *kafka.Message) {
-	workerKey := fmt.Sprintf("%s_%s", *msg.TopicPartition.Topic, string(msg.Key))
+func (p *Pool) RunTask(msg Message) {
+	workerKey := fmt.Sprintf("%s_%s", *msg.Topic, string(msg.Key))
 	worker := p.getWorker(workerKey)
 	worker.TaskChan <- msg
 }
 
 func (p *Pool) getWorker(workerKey string) *Worker {
+	log.Debugf("getting worker %s", workerKey)
 	p.RLock()
 	_, ok := p.workers[workerKey]
 	p.RUnlock()
 	if !ok {
+		log.Debugf("initializing worker %s", workerKey)
 		p.Lock()
 		p.workers[workerKey] = NewWorker(p.Work)
 		p.Unlock()
@@ -42,14 +44,14 @@ func (p *Pool) getWorker(workerKey string) *Worker {
 
 type Worker struct {
 	CloseChan chan int
-	TaskChan  chan *kafka.Message
+	TaskChan  chan Message
 	Error     error
 }
 
 func NewWorker(work Work) *Worker {
 	w := &Worker{
 		CloseChan: make(chan int),
-		TaskChan:  make(chan *kafka.Message),
+		TaskChan:  make(chan Message),
 	}
 	w.Start(work)
 

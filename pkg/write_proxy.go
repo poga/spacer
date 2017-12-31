@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 type WriteProxy struct {
-	produceChan chan *kafka.Message
+	produceChan chan Message
 	app         *Application
 }
 
-func NewWriteProxy(app *Application, produceChan chan *kafka.Message) (*WriteProxy, error) {
+func NewWriteProxy(app *Application, produceChan chan Message) (*WriteProxy, error) {
 	proxy := WriteProxy{produceChan, app}
 	return &proxy, nil
 }
@@ -35,10 +33,10 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	topic := fmt.Sprintf("%s_%s", p.app.GetString("appName"), write.Topic)
 	for key, value := range write.Entries {
-		p.produceChan <- &kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Key:            []byte(key),
-			Value:          value,
+		p.produceChan <- Message{
+			Topic: &topic,
+			Key:   []byte(key),
+			Value: value,
 		}
 	}
 	fmt.Fprintf(w, "ok")
