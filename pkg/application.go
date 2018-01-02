@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -94,10 +91,14 @@ func (app *Application) ConsumerGroupID() string {
 }
 
 func (app *Application) Brokers() []string {
-	return app.GetStringSlice("brokers")
+	return app.GetStringSlice("logStorage.brokers")
 }
 
-func (app *Application) Subscription() string {
+func (app *Application) LogStorage() string {
+	return app.GetString("logStorage.adapter")
+}
+
+func (app *Application) KafkaSubscriptionPattern() string {
 	return fmt.Sprintf("^%s_*", app.Name())
 }
 
@@ -116,7 +117,8 @@ func (app *Application) Invoke(msg Message) {
 }
 
 func (app *Application) invoke(fn FuncName, data []byte) error {
-	app.Log.Infof("Invoking %s", string(fn))
+	log := app.Log.WithField("fn", string(fn))
+	log.Infof("Invoking")
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		"POST",
@@ -150,7 +152,7 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 	if msg, ok := ret["error"]; ok {
 		return fmt.Errorf("Function returned error: %s", msg)
 	}
-	app.Log.Debugf("Invoke %s complete", string(fn))
+	log.Infof("Function Returned %s", string(body))
 	return nil
 }
 
@@ -177,11 +179,12 @@ func (app *Application) InvokeFunc(msg Message) error {
 }
 
 func (app *Application) Start() error {
-	// create a producer
-	producer, err := NewKafkaProducer(app)
+	producer, consumer, err := app.createProducerAndConsumer()
 	if err != nil {
-		app.Log.Fatal("Unable to create producer:", err)
+		app.Log.Fatalf("Failed to create producer or consumer: %s", err)
 	}
+	defer producer.Close()
+	defer consumer.Close()
 
 	go func() {
 		for m := range producer.Events() {
@@ -197,35 +200,10 @@ func (app *Application) Start() error {
 	go http.ListenAndServe(app.GetString("writeProxyListen"), writeProxy)
 	app.Log.WithField("listen", app.GetString("writeProxyListen")).Infof("Write Proxy Started")
 
-	consumer, err := NewKafkaConsumer(app)
-	if err != nil {
-		app.Log.Fatal("Failed to create consumer", err)
-	}
-
-	defer consumer.Close()
-
-	err = consumer.SubscribeTopics([]string{app.Subscription()})
-	if err != nil {
-		app.Log.Fatal("Failed to subscribe topics %v, %s", app.Subscription(), err)
-	}
 	app.Log.WithField("groupID", app.ConsumerGroupID()).Infof("Consumer Started")
 
-	// close consumers when user press ctrl+c
-	run := true
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for _ = range c {
-			fmt.Println("Exiting...")
-			run = false
-		}
-	}()
-
-	// periodically refresh metadata to know if there's any new topic created
-	go refreshMetadata(consumer, app.Log)
-
 	// start the consumer loop
-	for run {
+	for {
 		msg, err := consumer.Poll(100)
 		if err != nil {
 			app.Log.Fatalf("Consumer Error %s", msg)
@@ -239,14 +217,47 @@ func (app *Application) Start() error {
 	return nil
 }
 
-func refreshMetadata(consumer LogStorageConsumer, logger *log.Entry) {
-	for {
-		time.Sleep(5 * time.Second)
-		err := consumer.GetMetadata()
+func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStorageConsumer, error) {
+	var producer LogStorageProducer
+	var consumer LogStorageConsumer
+	var err error
+
+	app.Log.Infof("Starting Adapter %s", app.LogStorage())
+
+	switch app.LogStorage() {
+	case "kafka":
+		producer, err = NewKafkaProducer(app)
 		if err != nil {
-			// somethimes it just timed out, ignore
-			logger.Debugf("Unable to refresh metadata: %s", err)
-			continue
+			return nil, nil, err
 		}
+		consumer, err = NewKafkaConsumer(app)
+		if err != nil {
+			return nil, nil, err
+		}
+	case "memory":
+		producer = NewMemoryProducer()
+		consumer = NewMemoryConsumer()
+	case "postgres":
+		producer, err = NewPGProducer(app)
+		if err != nil {
+			return nil, nil, err
+		}
+		consumer, err = NewPGConsumer(app)
+		if err != nil {
+			return nil, nil, err
+		}
+
+	case "":
+		return nil, nil, fmt.Errorf("Missing logStorage adapter")
+	default:
+		return nil, nil, fmt.Errorf("Unknown Log Storage Adapter %s", app.LogStorage())
 	}
+
+	err = producer.CreateTopics(app.GetStringSlice("topics"))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return producer, consumer, nil
+
 }

@@ -1,5 +1,5 @@
-hash: fcb654e4860e407e45588c1975aac06c78a4de5f19a32b1951ee472343649152
-updated: 2017-12-26T02:09:09.295202081+08:00
+hash: 0256146e3cd127b0c32755bd772c5808d90d8a8e7679b514d45f868a8478777c
+updated: 2018-01-01T23:05:44.105345121+08:00
 imports:
 - name: github.com/confluentinc/confluent-kafka-go
   version: f696f02dcbb04d95b103c5b848bb15f749a996f7
@@ -28,6 +28,8 @@ imports:
   version: bbd0c6e271208dce66d8fda4bc536453cd27fc4a
   subpackages:
   - '...'
+- name: github.com/lib/pq
+  version: 83612a56d3dd153a94a629cd64925371c9adad78
 - name: github.com/magiconair/properties
   version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
 - name: github.com/mitchellh/mapstructure
@@ -39,7 +41,7 @@ imports:
 - name: github.com/sirupsen/logrus
   version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: github.com/spf13/afero
-  version: 8d919cbe7e2627e417f3e45c3c0e489a5b7e2536
+  version: 57afd63c68602b63ed976de00dd066ccb3c319db
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -53,7 +55,7 @@ imports:
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: golang.org/x/crypto
-  version: d585fd2cc9195196078f516b69daff6744ef5e84
+  version: 0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8
   subpackages:
   - ssh/terminal
 - name: golang.org/x/sys
@@ -62,7 +64,7 @@ imports:
   - unix
   - windows
 - name: golang.org/x/text
-  version: eb22672bea55af56d225d4e35405f4d2e9f062a0
+  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
   subpackages:
   - transform
   - unicode/norm

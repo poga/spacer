@@ -1,7 +1,9 @@
 package spacer
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	log "github.com/sirupsen/logrus"
@@ -12,6 +14,7 @@ type KafkaProducer struct {
 	produceChannel       chan Message
 	kafkaProducerChannel chan *kafka.Message
 	eventChannel         chan Message
+	appName              string
 
 	logger *log.Entry
 }
@@ -22,7 +25,7 @@ func NewKafkaProducer(app *Application) (*KafkaProducer, error) {
 		return nil, err
 	}
 
-	return &KafkaProducer{producer, nil, nil, nil, app.Log}, nil
+	return &KafkaProducer{producer, nil, nil, nil, app.Name(), app.Log}, nil
 }
 
 func (kp *KafkaProducer) ProduceChannel() chan Message {
@@ -36,8 +39,10 @@ func (kp *KafkaProducer) ProduceChannel() chan Message {
 
 	go func() {
 		for msg := range pc {
+			// add namespace to topic
+			topic := fmt.Sprintf("%s_%s", kp.appName, *msg.Topic)
 			kp.kafkaProducerChannel <- &kafka.Message{
-				TopicPartition: kafka.TopicPartition{Topic: msg.Topic, Partition: kafka.PartitionAny},
+				TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 				Key:            msg.Key,
 				Value:          msg.Value,
 			}
@@ -45,6 +50,16 @@ func (kp *KafkaProducer) ProduceChannel() chan Message {
 	}()
 
 	return kp.produceChannel
+}
+
+func (kp *KafkaProducer) Close() error {
+	kp.producer.Close()
+	return nil
+}
+
+func (kp *KafkaProducer) CreateTopics(topics []string) error {
+	// TODO
+	return nil
 }
 
 func (kp *KafkaProducer) Events() chan Message {
@@ -80,8 +95,7 @@ func (kp *KafkaProducer) Events() chan Message {
 
 type KafkaConsumer struct {
 	consumer *kafka.Consumer
-
-	logger *log.Entry
+	logger   *log.Entry
 }
 
 func NewKafkaConsumer(app *Application) (*KafkaConsumer, error) {
@@ -97,20 +111,31 @@ func NewKafkaConsumer(app *Application) (*KafkaConsumer, error) {
 		return nil, err
 	}
 
-	return &KafkaConsumer{consumer, app.Log}, nil
+	err = consumer.SubscribeTopics([]string{app.KafkaSubscriptionPattern()}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	kc := &KafkaConsumer{consumer, app.Log}
+	go kc.refreshMetadata()
+	return kc, nil
 }
 
 func (kc *KafkaConsumer) Close() error {
 	return kc.consumer.Close()
 }
 
-func (kc *KafkaConsumer) SubscribeTopics(topics []string) error {
-	return kc.consumer.SubscribeTopics(topics, nil)
-}
-
-func (kc *KafkaConsumer) GetMetadata() error {
-	_, err := kc.consumer.GetMetadata(nil, true, 100)
-	return err
+// periodically refresh metadata to know if there's any new topic created
+func (kc *KafkaConsumer) refreshMetadata() {
+	for {
+		time.Sleep(5 * time.Second)
+		_, err := kc.consumer.GetMetadata(nil, true, 100)
+		if err != nil {
+			// somethimes it just timed out, ignore
+			kc.logger.Debugf("Unable to refresh metadata: %s", err)
+			continue
+		}
+	}
 }
 
 func (kc *KafkaConsumer) Poll(timeoutMs int) (*Message, error) {

@@ -31,10 +31,9 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	topic := fmt.Sprintf("%s_%s", p.app.GetString("appName"), write.Topic)
 	for key, value := range write.Entries {
 		p.produceChan <- Message{
-			Topic: &topic,
+			Topic: &write.Topic,
 			Key:   []byte(key),
 			Value: value,
 		}

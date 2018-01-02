@@ -2,16 +2,30 @@ spacer: 1
 
 appName: HelloWorld
 
+topics:
+  - users
+  - blogs
+
 events:
-  example_topic:
+  exampleTopic:
     UPDATE:
       - foo
 
 # #########################################################
-# system configs
+# log storage
 
-brokers:
-  - localhost:9092
+logStorage:
+  # for kafka adapter
+  # adapter: kafka
+  # brokers:
+  # - localhost:9092
+
+  # for postgres adapter
+  adapter: postgres
+  connString: postgres://localhost/spacer?sslmode=disable
+
+# #########################################################
+# system configs
 
 # delegator: http://localhost:9064
 # writeProxyListen: :9065
