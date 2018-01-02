@@ -158,9 +158,7 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 
 // For WorkerPool
 func (app *Application) InvokeFunc(msg Message) error {
-	parts := strings.Split(*msg.Topic, "_")
-	objectType := parts[1]
-	routePath := GetRouteEvent(string(objectType), "UPDATE")
+	routePath := GetRouteEvent(string(*msg.Topic), "UPDATE")
 	app.Log.Debugf("Looking up route %s", routePath)
 
 	if _, ok := app.Routes[routePath]; !ok {
@@ -206,7 +204,7 @@ func (app *Application) Start() error {
 	for {
 		msg, err := consumer.Poll(100)
 		if err != nil {
-			app.Log.Fatalf("Consumer Error %s", msg)
+			app.Log.Fatalf("Consumer Error %s", err)
 		}
 		if msg == nil {
 			continue

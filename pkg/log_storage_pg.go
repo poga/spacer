@@ -109,17 +109,58 @@ func NewPGConsumer(app *Application) (*PGConsumer, error) {
 	if connStr == "" {
 		return nil, fmt.Errorf("Missing connString")
 	}
-	return &PGConsumer{connStr: connStr, subscribedTopics: make([]string, 0)}, nil
+
+	// create consumer_group_offsets if not exists
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	res, err := db.Query(`
+		CREATE TABLE IF NOT EXISTS consumer_group_offsets (
+			group_offset BIGINT NOT NULL,
+			group_id TEXT NOT NULL,
+			topic TEXT NOT NULL
+		)`)
+	if err != nil {
+		return nil, err
+	}
+	res.Close()
+	// create group_topic_index if not exists
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	res, err = db.Query(`
+		CREATE UNIQUE INDEX IF NOT EXISTS group_topic_idx on consumer_group_offsets (group_id, topic)
+		`)
+	if err != nil {
+		return nil, err
+	}
+	res.Close()
+
+	for _, topic := range app.GetStringSlice("topics") {
+		res, err := db.Query(`
+			INSERT INTO consumer_group_offsets (group_offset, group_id, topic)
+			VALUES ($1, $2, $3)
+			ON CONFLICT (group_id, topic) DO NOTHING`, 0, app.ConsumerGroupID(), topic)
+		if err != nil {
+			return nil, err
+		}
+		res.Close()
+	}
+
+	return &PGConsumer{
+		connStr:          connStr,
+		subscribedTopics: app.GetStringSlice("topics"),
+		consumerGroupID:  app.ConsumerGroupID(),
+	}, nil
 }
 
 func (c *PGConsumer) Close() error {
 	// no-op
 	return nil
-}
-
-type pollResult struct {
-	count  int
-	offset int
 }
 
 func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
@@ -131,22 +172,23 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 	defer db.Close()
 
 	for _, topic := range c.subscribedTopics {
-		res := pollResult{}
+		var count int
+		var offset int
 		err := db.QueryRow(fmt.Sprintf(`
 			SELECT
 				(SELECT count(1) FROM topic_%s) as count,
 				(SELECT group_offset FROM consumer_group_offsets WHERE group_id = $1 AND topic = $2) as offset`,
 			topic),
-			c.consumerGroupID, topic).Scan(&res)
+			c.consumerGroupID, topic).Scan(&count, &offset)
 		switch {
 		case err == sql.ErrNoRows:
 			return nil, fmt.Errorf("Can't find table topic_%s", topic)
 		case err != nil:
 			return nil, err
 		default:
-			if res.count <= res.offset {
+			if count <= offset {
 				// no new messages
-				return nil, nil
+				continue
 			}
 
 			// row lock
@@ -165,20 +207,19 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 			rows.Close()
 
 			// check offset still > count
-			res := pollResult{}
 			err = db.QueryRow(fmt.Sprintf(`
 				SELECT
 					(SELECT count(1) FROM topic_%s) as count,
 					(SELECT group_offset FROM consumer_group_offsets WHERE group_id = $1 AND topic = $2) as offset`,
 				topic),
-				c.consumerGroupID, topic).Scan(&res)
+				c.consumerGroupID, topic).Scan(&count, &offset)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
 			}
 
 			// check again
-			if res.count <= res.offset {
+			if count <= offset {
 				// some one in this group already take the message away
 				tx.Rollback()
 				return nil, nil
@@ -186,7 +227,7 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 
 			// bump offset
 			row, err := tx.Query(
-				`UPDATE	consuer_group_offsets
+				`UPDATE	consumer_group_offsets
 				 SET group_offset = group_offset + 1
 				 WHERE group_id = $1 AND topic = $2`, c.consumerGroupID, topic)
 			if err != nil {
@@ -194,11 +235,13 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 				return nil, err
 			}
 			row.Close()
-			msg := Message{}
+			var msgOffset int
+			var msgKey string
+			var msgValue string
 			// get message at new offset
 			err = tx.QueryRow(fmt.Sprintf(
-				`SELECT * FROM topic_%s WHERE msg_offset = $1`, topic),
-				res.offset+1).Scan(&msg)
+				`SELECT msg_offset, key, value FROM topic_%s WHERE msg_offset = $1`, topic),
+				offset+1).Scan(&msgOffset, &msgKey, &msgValue)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
@@ -209,7 +252,7 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 				tx.Rollback()
 				return nil, err
 			}
-			return &msg, nil
+			return &Message{Offset: msgOffset, Key: []byte(msgKey), Value: []byte(msgValue), Topic: &topic}, nil
 		}
 	}
 
