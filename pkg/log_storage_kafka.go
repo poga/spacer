@@ -77,8 +77,11 @@ func (kp *KafkaProducer) Events() chan Message {
 				if m.TopicPartition.Error != nil {
 					kp.logger.Fatal("delivery failed", m.TopicPartition.Error)
 				} else {
+					// remove namespace prefix
+					topic := strings.Split(*m.TopicPartition.Topic, "_")[1]
+
 					kp.eventChannel <- Message{
-						Topic:  m.TopicPartition.Topic,
+						Topic:  &topic,
 						Offset: int(m.TopicPartition.Offset),
 						Key:    m.Key,
 						Value:  m.Value,
@@ -111,7 +114,9 @@ func NewKafkaConsumer(app *Application) (*KafkaConsumer, error) {
 		return nil, err
 	}
 
-	err = consumer.SubscribeTopics([]string{app.KafkaSubscriptionPattern()}, nil)
+	subscriptionTopicPattern := fmt.Sprintf("^%s_*", app.Name())
+
+	err = consumer.SubscribeTopics([]string{subscriptionTopicPattern}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +158,11 @@ func (kc *KafkaConsumer) Poll(timeoutMs int) (*Message, error) {
 		kc.consumer.Unassign()
 	case *kafka.Message:
 		kc.logger.Debugf("Message Received %s", e.TopicPartition)
+		// remove namespace prefix
+		topic := strings.Split(*e.TopicPartition.Topic, "_")[1]
 
 		return &Message{
-			Topic:  e.TopicPartition.Topic,
+			Topic:  &topic,
 			Value:  e.Value,
 			Key:    e.Key,
 			Offset: int(e.TopicPartition.Offset),

@@ -174,6 +174,7 @@ func (c *PGConsumer) Poll(timeoutMs int) (*Message, error) {
 	for _, topic := range c.subscribedTopics {
 		var count int
 		var offset int
+		// TODO: group polling query for each topic into one
 		err := db.QueryRow(fmt.Sprintf(`
 			SELECT
 				(SELECT count(1) FROM topic_%s) as count,

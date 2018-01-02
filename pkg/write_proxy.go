@@ -18,6 +18,7 @@ func NewWriteProxy(app *Application, produceChan chan Message) (*WriteProxy, err
 }
 
 func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		p.app.Log.Error("read body failed", err)

@@ -98,10 +98,6 @@ func (app *Application) LogStorage() string {
 	return app.GetString("logStorage.adapter")
 }
 
-func (app *Application) KafkaSubscriptionPattern() string {
-	return fmt.Sprintf("^%s_*", app.Name())
-}
-
 func (app *Application) GetObjectTopic(objectType string) string {
 	return fmt.Sprintf("%s_%s", app.Name(), objectType)
 }
