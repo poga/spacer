@@ -1,5 +1,5 @@
 local json = require "cjson"
-local gateway = require "gateway"
+local router = require "router"
 local env = os.getenv('SPACER_ENV')
 
 local reject = function (status, body)
@@ -10,7 +10,7 @@ end
 
 ngx.req.read_body()
 
-local module = gateway(ngx.var.request_method, ngx.var.uri)
+local module = router(ngx.var.request_method, ngx.var.uri)
 
 if module == nil then return reject(404, {["error"] = "not found"}) end
 

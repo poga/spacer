@@ -3,6 +3,7 @@
 // app/gateway.lua
 // app/hello.lua
 // app/spacer/log.lua
+// app/spacer/router.lua
 // app/spacer/run.lua
 // app/spacer/service.lua
 // app/spacer/trace.lua
@@ -79,6 +80,24 @@ func appHelloLua() (*asset, error) {
 func appSpacerLogLua() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/app/spacer/log.lua"
 	name := "app/spacer/log.lua"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// appSpacerRouterLua reads file data from disk. It returns an error on failure.
+func appSpacerRouterLua() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/app/spacer/router.lua"
+	name := "app/spacer/router.lua"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -328,6 +347,7 @@ var _bindata = map[string]func() (*asset, error){
 	"app/gateway.lua": appGatewayLua,
 	"app/hello.lua": appHelloLua,
 	"app/spacer/log.lua": appSpacerLogLua,
+	"app/spacer/router.lua": appSpacerRouterLua,
 	"app/spacer/run.lua": appSpacerRunLua,
 	"app/spacer/service.lua": appSpacerServiceLua,
 	"app/spacer/trace.lua": appSpacerTraceLua,
@@ -385,6 +405,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"hello.lua": &bintree{appHelloLua, map[string]*bintree{}},
 		"spacer": &bintree{nil, map[string]*bintree{
 			"log.lua": &bintree{appSpacerLogLua, map[string]*bintree{}},
+			"router.lua": &bintree{appSpacerRouterLua, map[string]*bintree{}},
 			"run.lua": &bintree{appSpacerRunLua, map[string]*bintree{}},
 			"service.lua": &bintree{appSpacerServiceLua, map[string]*bintree{}},
 			"trace.lua": &bintree{appSpacerTraceLua, map[string]*bintree{}},
