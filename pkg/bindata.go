@@ -7,9 +7,12 @@
 // app/spacer/service.lua
 // app/spacer/trace.lua
 // bin/start.sh
-// spacer.example.yml
+// config/application.yml
+// config/env.development.yml
+// config/env.production.yml
+// config/env.test.yml
+// config/nginx.conf
 // appignore
-// nginx.conf
 // DO NOT EDIT!
 
 package spacer
@@ -162,10 +165,82 @@ func binStartSh() (*asset, error) {
 	return a, err
 }
 
-// spacerExampleYml reads file data from disk. It returns an error on failure.
-func spacerExampleYml() (*asset, error) {
-	path := "/Users/poga/projects/go/src/github.com/poga/spacer/spacer.example.yml"
-	name := "spacer.example.yml"
+// configApplicationYml reads file data from disk. It returns an error on failure.
+func configApplicationYml() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/application.yml"
+	name := "config/application.yml"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// configEnvDevelopmentYml reads file data from disk. It returns an error on failure.
+func configEnvDevelopmentYml() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/env.development.yml"
+	name := "config/env.development.yml"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// configEnvProductionYml reads file data from disk. It returns an error on failure.
+func configEnvProductionYml() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/env.production.yml"
+	name := "config/env.production.yml"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// configEnvTestYml reads file data from disk. It returns an error on failure.
+func configEnvTestYml() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/env.test.yml"
+	name := "config/env.test.yml"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// configNginxConf reads file data from disk. It returns an error on failure.
+func configNginxConf() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/nginx.conf"
+	name := "config/nginx.conf"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -184,24 +259,6 @@ func spacerExampleYml() (*asset, error) {
 func appignore() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/appignore"
 	name := "appignore"
-	bytes, err := bindataRead(path, name)
-	if err != nil {
-		return nil, err
-	}
-
-	fi, err := os.Stat(path)
-	if err != nil {
-		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
-	}
-
-	a := &asset{bytes: bytes, info: fi}
-	return a, err
-}
-
-// nginxConf reads file data from disk. It returns an error on failure.
-func nginxConf() (*asset, error) {
-	path := "/Users/poga/projects/go/src/github.com/poga/spacer/nginx.conf"
-	name := "nginx.conf"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -275,9 +332,12 @@ var _bindata = map[string]func() (*asset, error){
 	"app/spacer/service.lua": appSpacerServiceLua,
 	"app/spacer/trace.lua": appSpacerTraceLua,
 	"bin/start.sh": binStartSh,
-	"spacer.example.yml": spacerExampleYml,
+	"config/application.yml": configApplicationYml,
+	"config/env.development.yml": configEnvDevelopmentYml,
+	"config/env.production.yml": configEnvProductionYml,
+	"config/env.test.yml": configEnvTestYml,
+	"config/nginx.conf": configNginxConf,
 	"appignore": appignore,
-	"nginx.conf": nginxConf,
 }
 
 // AssetDir returns the file names below a certain
@@ -334,8 +394,13 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"bin": &bintree{nil, map[string]*bintree{
 		"start.sh": &bintree{binStartSh, map[string]*bintree{}},
 	}},
-	"nginx.conf": &bintree{nginxConf, map[string]*bintree{}},
-	"spacer.example.yml": &bintree{spacerExampleYml, map[string]*bintree{}},
+	"config": &bintree{nil, map[string]*bintree{
+		"application.yml": &bintree{configApplicationYml, map[string]*bintree{}},
+		"env.development.yml": &bintree{configEnvDevelopmentYml, map[string]*bintree{}},
+		"env.production.yml": &bintree{configEnvProductionYml, map[string]*bintree{}},
+		"env.test.yml": &bintree{configEnvTestYml, map[string]*bintree{}},
+		"nginx.conf": &bintree{configNginxConf, map[string]*bintree{}},
+	}},
 }}
 
 // RestoreAsset restores an asset under the given directory

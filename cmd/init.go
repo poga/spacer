@@ -30,9 +30,8 @@ var initCmd = &cobra.Command{
 		err = series([]func() error{
 			func() error { return spacer.RestoreAssets(targetDir, "app") },
 			func() error { return spacer.RestoreAssets(targetDir, "bin") },
-			func() error { return writeFile(filepath.Join(targetDir, "spacer.yml"), "spacer.example.yml") },
+			func() error { return spacer.RestoreAssets(targetDir, "config") },
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
-			func() error { return writeFile(filepath.Join(targetDir, "nginx.conf"), "nginx.conf") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
 		})

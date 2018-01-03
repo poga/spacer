@@ -1,23 +1,12 @@
-hash: 0256146e3cd127b0c32755bd772c5808d90d8a8e7679b514d45f868a8478777c
-updated: 2018-01-01T23:05:44.105345121+08:00
+hash: 0cca2b57c2fbf8d1c486028ddba5d461585207043bd1436f337c21be7cadd20f
+updated: 2018-01-03T20:03:56.073864665+08:00
 imports:
 - name: github.com/confluentinc/confluent-kafka-go
   version: f696f02dcbb04d95b103c5b848bb15f749a996f7
   subpackages:
   - kafka
-- name: github.com/fsnotify/fsnotify
-  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
-- name: github.com/hashicorp/hcl
-  version: 23c074d0eceb2b8a5bfdbb271ab780cde70f05a8
-  subpackages:
-  - hcl/ast
-  - hcl/parser
-  - hcl/scanner
-  - hcl/strconv
-  - hcl/token
-  - json/parser
-  - json/scanner
-  - json/token
+- name: github.com/go-yaml/yaml
+  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 - name: github.com/hpcloud/tail
   version: a30252cb686a21eb2d0b98132633053ec2f7f1e5
   subpackages:
@@ -30,30 +19,16 @@ imports:
   - '...'
 - name: github.com/lib/pq
   version: 83612a56d3dd153a94a629cd64925371c9adad78
-- name: github.com/magiconair/properties
-  version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
-- name: github.com/mitchellh/mapstructure
-  version: 06020f85339e21b2478f756a78e295255ffa4d6a
-- name: github.com/pelletier/go-toml
-  version: 0131db6d737cfbbfb678f8b7d92e55e27ce46224
+  subpackages:
+  - oid
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/sirupsen/logrus
   version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
-- name: github.com/spf13/afero
-  version: 57afd63c68602b63ed976de00dd066ccb3c319db
-  subpackages:
-  - mem
-- name: github.com/spf13/cast
-  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
   version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
-- name: github.com/spf13/jwalterweatherman
-  version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
   version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
-- name: github.com/spf13/viper
-  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: golang.org/x/crypto
   version: 0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8
   subpackages:
@@ -63,11 +38,6 @@ imports:
   subpackages:
   - unix
   - windows
-- name: golang.org/x/text
-  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
-  subpackages:
-  - transform
-  - unicode/norm
 - name: gopkg.in/yaml.v2
   version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 testImports: []

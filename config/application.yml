@@ -1,0 +1,15 @@
+spacerVersion: 1
+
+appName: HelloWorld
+
+topics:
+  - users
+  - blogs
+
+events:
+  exampleTopic:
+    APPEND:
+      - foo
+
+# consumerGroupID: spacer-$appName
+

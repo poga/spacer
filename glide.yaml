@@ -9,8 +9,6 @@ import:
 - package: github.com/sirupsen/logrus
 - package: github.com/spf13/cobra
   version: ^0.0.1
-- package: github.com/spf13/viper
-  version: ^1.0.0
 - package: github.com/hpcloud/tail
   version: ^1.0.0
   subpackages:
@@ -20,3 +18,4 @@ import:
   subpackages:
   - '...'
 - package: github.com/lib/pq
+- package: github.com/go-yaml/yaml

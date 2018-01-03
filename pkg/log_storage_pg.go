@@ -15,7 +15,7 @@ type PGProducer struct {
 }
 
 func NewPGProducer(app *Application) (*PGProducer, error) {
-	connStr := app.GetString("logStorage.connString")
+	connStr := app.envConfig.LogStorage.ConnString
 	if connStr == "" {
 		return nil, fmt.Errorf("Missing connString")
 	}
@@ -105,7 +105,7 @@ type PGConsumer struct {
 }
 
 func NewPGConsumer(app *Application) (*PGConsumer, error) {
-	connStr := app.GetString("logStorage.connString")
+	connStr := app.envConfig.LogStorage.ConnString
 	if connStr == "" {
 		return nil, fmt.Errorf("Missing connString")
 	}
@@ -140,11 +140,11 @@ func NewPGConsumer(app *Application) (*PGConsumer, error) {
 	}
 	res.Close()
 
-	for _, topic := range app.GetStringSlice("topics") {
+	for _, topic := range app.appConfig.Topics {
 		res, err := db.Query(`
 			INSERT INTO consumer_group_offsets (group_offset, group_id, topic)
 			VALUES ($1, $2, $3)
-			ON CONFLICT (group_id, topic) DO NOTHING`, 0, app.ConsumerGroupID(), topic)
+			ON CONFLICT (group_id, topic) DO NOTHING`, 0, app.ConsumerGroupID, topic)
 		if err != nil {
 			return nil, err
 		}
@@ -153,8 +153,8 @@ func NewPGConsumer(app *Application) (*PGConsumer, error) {
 
 	return &PGConsumer{
 		connStr:          connStr,
-		subscribedTopics: app.GetStringSlice("topics"),
-		consumerGroupID:  app.ConsumerGroupID(),
+		subscribedTopics: app.appConfig.Topics,
+		consumerGroupID:  app.ConsumerGroupID,
 	}, nil
 }
 

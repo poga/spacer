@@ -1,7 +1,7 @@
 trap "exit" INT TERM ERR
 trap "kill 0" EXIT
 
-openresty -p `pwd`/ -c nginx.conf &
+openresty -p `pwd`/ -c config/nginx.conf &
 touch logs/access.log
 touch logs/error.log
 

@@ -13,21 +13,22 @@ var configName string
 var consumerGroupID string
 
 var startCmd = &cobra.Command{
-	Use:   "start [projectDirectory]",
+	Use:   "start <projectDirectory> <env>",
 	Short: "Start a spacer router for given project",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		projectDir, err := filepath.Abs(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
+		env := args[1]
 
-		app, err := spacer.NewApplication(projectDir, configName)
+		app, err := spacer.NewApplication(projectDir, configName, env)
 		if err != nil {
 			log.Fatal(err)
 		}
 		if consumerGroupID != "" {
-			app.Set("consumerGroupPrefix", consumerGroupID)
+			app.ConsumerGroupID = consumerGroupID
 		}
 
 		err = app.Start()

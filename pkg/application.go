@@ -6,104 +6,154 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const CONFIG_VERSION = 1
 
+type ApplicationConfig struct {
+	SpacerVersion int                            `yaml:"spacerVersion"`
+	AppName       string                         `yaml:"appName"`
+	Topics        []string                       `yaml:"topics"`
+	Events        map[string]map[string][]string `yaml:"events"`
+
+	ConsumerGroupID string
+}
+
+type EnvConfig struct {
+	LogStorage struct {
+		Adapter string `yaml:"adapter"`
+
+		// pg
+		ConnString string `yaml:"connString"`
+
+		// kafka
+		Brokers []string `yaml:"brokers"`
+	} `yaml:"logStorage"`
+
+	Delegator        string `yaml:"delegator"`
+	WriteProxyListen string `yaml:"writeProxyListen"`
+}
+
 type Application struct {
-	*viper.Viper
-	Log        *log.Entry
-	Routes     map[Event][]FuncName
-	WorkerPool *Pool
+	appConfig       *ApplicationConfig
+	envConfig       *EnvConfig
+	Log             *log.Entry
+	Routes          map[Event][]*url.URL
+	WorkerPool      *Pool
+	ConsumerGroupID string
 }
 
 type Event string
-type FuncName string
 
-func NewApplication(configPath string, configName string) (*Application, error) {
-	config := viper.New()
-	config.AddConfigPath(configPath)
-	config.SetConfigName(configName)
-
-	// default configs
-	config.SetDefault("consumerGroupID", "spacer-$appName")
-	config.SetDefault("delegator", "http://localhost:9064")
-	config.SetDefault("writeProxyListen", ":9065")
-
-	err := config.ReadInConfig()
+func NewApplicationConfig(file string) (*ApplicationConfig, error) {
+	configData, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	config := ApplicationConfig{}
+	err = yaml.Unmarshal(configData, &config)
 	if err != nil {
 		return nil, err
 	}
 
-	router := make(map[Event][]FuncName)
-	// load routes
-	routeConfig := config.Sub("events")
-	for _, objectAndEvent := range routeConfig.AllKeys() {
-		parts := strings.Split(objectAndEvent, ".")
-		object := parts[0]
-		eventType := parts[1]
-		routerKey := GetRouteEvent(object, eventType)
-		router[routerKey] = make([]FuncName, 0)
-		for _, funcName := range routeConfig.GetStringSlice(objectAndEvent) {
-			router[routerKey] = append(router[routerKey], FuncName(funcName))
-		}
+	// defaults
+	if config.ConsumerGroupID == "" {
+		config.ConsumerGroupID = "spacer-$appName"
+	}
+	fmt.Printf("env: %v\n", config)
+
+	// validation
+	if config.SpacerVersion != CONFIG_VERSION {
+		return nil, fmt.Errorf("Expect config version %d, got %d", CONFIG_VERSION, config.SpacerVersion)
+	}
+	if strings.Contains(config.AppName, "_") {
+		return nil, fmt.Errorf("appName %s cannot contains \"_\"", config.AppName)
 	}
 
-	logger := log.WithFields(log.Fields{"appName": config.GetString("appName")})
-	app := &Application{config, logger, router, nil}
-	app.WorkerPool = NewPool(app.InvokeFunc)
-
-	err = validateApp(app)
-	if err != nil {
-		return nil, errors.Wrap(err, "application validation failed")
-	}
-
-	return app, nil
+	return &config, nil
 }
 
-func validateApp(app *Application) error {
-	if app.GetInt("spacer") != CONFIG_VERSION {
-		return fmt.Errorf("Expect config version %d, got %d", CONFIG_VERSION, app.GetInt("spacer"))
+func NewEnvConfig(file string) (*EnvConfig, error) {
+	configData, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
 	}
-	if strings.Contains(app.Name(), "_") {
-		return fmt.Errorf("app.name %s cannot contains \"_\"", app.GetString("appName"))
+	config := EnvConfig{}
+	err = yaml.Unmarshal(configData, &config)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	// defaults
+	if config.Delegator == "" {
+		config.Delegator = "http://localhost:9064"
+	}
+	if config.WriteProxyListen == "" {
+		config.WriteProxyListen = ":9065"
+	}
+	fmt.Printf("app: %v\n", config)
+
+	return &config, nil
+}
+
+func NewApplication(configPath string, configName string, env string) (*Application, error) {
+	appConfig, err := NewApplicationConfig(filepath.Join(configPath, "config", "application.yml"))
+	if err != nil {
+		return nil, err
+	}
+	envConfig, err := NewEnvConfig(filepath.Join(configPath, "config", fmt.Sprintf("env.%s.yml", env)))
+	if err != nil {
+		return nil, err
+	}
+
+	router := make(map[Event][]*url.URL)
+
+	for topic, handlers := range appConfig.Events {
+		for event, functionName := range handlers {
+			routing := GetRouteEvent(topic, event)
+			if _, ok := router[routing]; !ok {
+				router[routing] = make([]*url.URL, 0)
+			}
+
+			url, err := url.Parse(fmt.Sprintf("%s/%s", envConfig.Delegator, functionName))
+			if err != nil {
+				return nil, err
+			}
+
+			router[routing] = append(router[routing], url)
+		}
+	}
+	logger := log.WithFields(log.Fields{"appName": appConfig.AppName})
+	consumerGroupID := strings.Replace(appConfig.ConsumerGroupID, "$appName", appConfig.AppName, -1)
+	app := &Application{appConfig, envConfig, logger, router, nil, consumerGroupID}
+	app.WorkerPool = NewPool(app.InvokeFunc)
+
+	return app, nil
 }
 
 func GetRouteEvent(object string, eventType string) Event {
 	return Event(fmt.Sprintf("%s:%s", object, strings.ToUpper(eventType)))
 }
 
-func GetAbsoluteFuncPath(delegator string, funcName string) FuncName {
-	return FuncName(fmt.Sprintf("%s/%s", delegator, funcName))
-}
-
-func (app *Application) ConsumerGroupID() string {
-	return strings.Replace(app.GetString("consumerGroupID"), "$appName", app.Name(), -1)
-}
-
 func (app *Application) Brokers() []string {
-	return app.GetStringSlice("logStorage.brokers")
+	return app.envConfig.LogStorage.Brokers
 }
 
-func (app *Application) LogStorage() string {
-	return app.GetString("logStorage.adapter")
-}
-
-func (app *Application) GetObjectTopic(objectType string) string {
-	return fmt.Sprintf("%s_%s", app.Name(), objectType)
+func (app *Application) LogStorageAdapter() string {
+	return app.envConfig.LogStorage.Adapter
 }
 
 func (app *Application) Name() string {
-	return app.GetString("appName")
+	return app.appConfig.AppName
 }
 
 func (app *Application) Invoke(msg Message) {
@@ -112,13 +162,13 @@ func (app *Application) Invoke(msg Message) {
 	}()
 }
 
-func (app *Application) invoke(fn FuncName, data []byte) error {
-	log := app.Log.WithField("fn", string(fn))
+func (app *Application) invoke(url *url.URL, data []byte) error {
+	log := app.Log.WithField("fn", url.Path)
 	log.Infof("Invoking")
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		"POST",
-		strings.Join([]string{app.GetString("delegator"), string(fn)}, "/"),
+		url.String(),
 		bytes.NewReader(data),
 	)
 
@@ -154,7 +204,7 @@ func (app *Application) invoke(fn FuncName, data []byte) error {
 
 // For WorkerPool
 func (app *Application) InvokeFunc(msg Message) error {
-	routePath := GetRouteEvent(string(*msg.Topic), "UPDATE")
+	routePath := GetRouteEvent(string(*msg.Topic), "APPEND")
 	app.Log.Debugf("Looking up route %s", routePath)
 
 	if _, ok := app.Routes[routePath]; !ok {
@@ -191,10 +241,10 @@ func (app *Application) Start() error {
 	if err != nil {
 		app.Log.Fatal(err)
 	}
-	go http.ListenAndServe(app.GetString("writeProxyListen"), writeProxy)
-	app.Log.WithField("listen", app.GetString("writeProxyListen")).Infof("Write Proxy Started")
+	go http.ListenAndServe(app.envConfig.WriteProxyListen, writeProxy)
+	app.Log.WithField("listen", app.envConfig.WriteProxyListen).Infof("Write Proxy Started")
 
-	app.Log.WithField("groupID", app.ConsumerGroupID()).Infof("Consumer Started")
+	app.Log.WithField("groupID", app.ConsumerGroupID).Infof("Consumer Started")
 
 	// start the consumer loop
 	for {
@@ -216,9 +266,10 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 	var consumer LogStorageConsumer
 	var err error
 
-	app.Log.Infof("Starting Adapter %s", app.LogStorage())
+	adapter := app.envConfig.LogStorage.Adapter
+	app.Log.Infof("Starting Adapter %s", adapter)
 
-	switch app.LogStorage() {
+	switch adapter {
 	case "kafka":
 		producer, err = NewKafkaProducer(app)
 		if err != nil {
@@ -244,10 +295,10 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 	case "":
 		return nil, nil, fmt.Errorf("Missing logStorage adapter")
 	default:
-		return nil, nil, fmt.Errorf("Unknown Log Storage Adapter %s", app.LogStorage())
+		return nil, nil, fmt.Errorf("Unknown Log Storage Adapter %s", adapter)
 	}
 
-	err = producer.CreateTopics(app.GetStringSlice("topics"))
+	err = producer.CreateTopics(app.appConfig.Topics)
 	if err != nil {
 		return nil, nil, err
 	}

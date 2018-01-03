@@ -104,7 +104,7 @@ type KafkaConsumer struct {
 func NewKafkaConsumer(app *Application) (*KafkaConsumer, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":               strings.Join(app.Brokers(), ","),
-		"group.id":                        app.ConsumerGroupID(),
+		"group.id":                        app.ConsumerGroupID,
 		"session.timeout.ms":              6000,
 		"go.application.rebalance.enable": true,
 		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
