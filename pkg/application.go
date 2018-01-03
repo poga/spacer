@@ -32,7 +32,7 @@ func NewApplication(configPath string, configName string) (*Application, error) 
 	config.SetConfigName(configName)
 
 	// default configs
-	config.SetDefault("consumerGroupPrefix", "spacer")
+	config.SetDefault("consumerGroupID", "spacer-$appName")
 	config.SetDefault("delegator", "http://localhost:9064")
 	config.SetDefault("writeProxyListen", ":9065")
 
@@ -87,7 +87,7 @@ func GetAbsoluteFuncPath(delegator string, funcName string) FuncName {
 }
 
 func (app *Application) ConsumerGroupID() string {
-	return strings.Join([]string{app.GetString("consumerGroupPrefix"), app.Name()}, "-")
+	return strings.Replace(app.GetString("consumerGroupID"), "$appName", app.Name(), -1)
 }
 
 func (app *Application) Brokers() []string {

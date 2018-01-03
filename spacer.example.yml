@@ -29,5 +29,5 @@ logStorage:
 
 # delegator: http://localhost:9064
 # writeProxyListen: :9065
-# consumerGroupPrefix: spacer
+# consumerGroupID: spacer-$appName
 
