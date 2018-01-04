@@ -1,5 +1,5 @@
-hash: 0cca2b57c2fbf8d1c486028ddba5d461585207043bd1436f337c21be7cadd20f
-updated: 2018-01-03T20:03:56.073864665+08:00
+hash: cfd325670d10d7c4cb5772f36b897fa3550f2895becbfd5f8ab1a17f4c45b8a5
+updated: 2018-01-04T21:32:42.144274+08:00
 imports:
 - name: github.com/confluentinc/confluent-kafka-go
   version: f696f02dcbb04d95b103c5b848bb15f749a996f7
@@ -38,6 +38,8 @@ imports:
   subpackages:
   - unix
   - windows
+- name: gopkg.in/russross/blackfriday.v2
+  version: 187c33ff049bddf24fc5c5b82facfdd62813a552
 - name: gopkg.in/yaml.v2
   version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 testImports: []
