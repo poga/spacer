@@ -1,5 +1,6 @@
 local _R = {
-    {"POST", "/say_hello", "hello"}
+    -- HTTP Method, Path, Function Name
+    {"GET", "/hello", "hello"}
 }
 
 return _R

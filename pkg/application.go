@@ -156,6 +156,10 @@ func (app *Application) Name() string {
 	return app.appConfig.AppName
 }
 
+func (app *Application) Delegator() string {
+	return app.envConfig.Delegator
+}
+
 func (app *Application) Invoke(msg Message) {
 	go func() {
 		app.WorkerPool.RunTask(msg)
@@ -222,7 +226,7 @@ func (app *Application) InvokeFunc(msg Message) error {
 	return nil
 }
 
-func (app *Application) Start() error {
+func (app *Application) Start(readyChan chan int) error {
 	producer, consumer, err := app.createProducerAndConsumer()
 	if err != nil {
 		app.Log.Fatalf("Failed to create producer or consumer: %s", err)
@@ -245,6 +249,10 @@ func (app *Application) Start() error {
 	app.Log.WithField("listen", app.envConfig.WriteProxyListen).Infof("Write Proxy Started")
 
 	app.Log.WithField("groupID", app.ConsumerGroupID).Infof("Consumer Started")
+
+	if readyChan != nil {
+		readyChan <- 0
+	}
 
 	// start the consumer loop
 	for {

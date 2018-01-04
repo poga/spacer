@@ -14,6 +14,7 @@
 // config/env.test.yml
 // config/nginx.conf
 // appignore
+// hello.t.md
 // DO NOT EDIT!
 
 package spacer
@@ -292,6 +293,24 @@ func appignore() (*asset, error) {
 	return a, err
 }
 
+// helloTMd reads file data from disk. It returns an error on failure.
+func helloTMd() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/hello.t.md"
+	name := "hello.t.md"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -358,6 +377,7 @@ var _bindata = map[string]func() (*asset, error){
 	"config/env.test.yml": configEnvTestYml,
 	"config/nginx.conf": configNginxConf,
 	"appignore": appignore,
+	"hello.t.md": helloTMd,
 }
 
 // AssetDir returns the file names below a certain
@@ -422,6 +442,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"env.test.yml": &bintree{configEnvTestYml, map[string]*bintree{}},
 		"nginx.conf": &bintree{configNginxConf, map[string]*bintree{}},
 	}},
+	"hello.t.md": &bintree{helloTMd, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

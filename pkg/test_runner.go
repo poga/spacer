@@ -77,9 +77,10 @@ func (t *Test) Run() error {
 	if err != nil {
 		return err
 	}
+	bodyStr := strings.TrimSpace(string(body))
 
-	if string(body) != t.ExpectBody {
-		return fmt.Errorf("Got body %s, expect %s", string(body), t.ExpectBody)
+	if bodyStr != t.ExpectBody {
+		return fmt.Errorf("Got body %s, expect %s", bodyStr, t.ExpectBody)
 	}
 
 	return nil

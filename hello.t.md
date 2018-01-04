@@ -11,5 +11,5 @@ A basic test spec
 ## expect body
 
 ```json
-{"data": "Hello Spacer"}
+{"data":"Hello Spacer!"}
 ```

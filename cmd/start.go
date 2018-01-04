@@ -31,7 +31,7 @@ var startCmd = &cobra.Command{
 			app.ConsumerGroupID = consumerGroupID
 		}
 
-		err = app.Start()
+		err = app.Start(nil)
 		if err != nil {
 			log.Fatal(err)
 		}

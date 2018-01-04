@@ -27,6 +27,10 @@ var initCmd = &cobra.Command{
 			log.Fatalf("Target Directory is Required")
 		}
 
+		if _, err := os.Stat(targetDir); err == nil {
+			log.Fatal("Target Directory already exists")
+		}
+
 		err = series([]func() error{
 			func() error { return spacer.RestoreAssets(targetDir, "app") },
 			func() error { return spacer.RestoreAssets(targetDir, "bin") },
@@ -34,6 +38,8 @@ var initCmd = &cobra.Command{
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
+			func() error { return os.Mkdir(filepath.Join(targetDir, "test"), os.ModePerm) },
+			func() error { return writeFile(filepath.Join(targetDir, "test/hello.t.md"), "hello.t.md") },
 		})
 		if err != nil {
 			log.Fatal(err)
