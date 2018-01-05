@@ -1,5 +1,8 @@
+local service = require "service"
+
 local G = function (event, ctx)
-    return "Hello Spacer!"
+    local ret = service.call("lib/foo")
+    return "Hello Spacer " .. ret
 end
 
 return G
