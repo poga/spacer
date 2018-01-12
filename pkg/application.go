@@ -69,7 +69,7 @@ func NewApplicationConfig(file string) (*ApplicationConfig, error) {
 	if config.ConsumerGroupID == "" {
 		config.ConsumerGroupID = "spacer-$appName"
 	}
-	fmt.Printf("env: %v\n", config)
+	log.Debugf("environment config: %v", config)
 
 	// validation
 	if config.SpacerVersion != CONFIG_VERSION {
@@ -100,7 +100,7 @@ func NewEnvConfig(file string) (*EnvConfig, error) {
 	if config.WriteProxyListen == "" {
 		config.WriteProxyListen = ":9065"
 	}
-	fmt.Printf("app: %v\n", config)
+	log.Debugf("application config: %v", config)
 
 	return &config, nil
 }
