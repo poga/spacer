@@ -30,7 +30,7 @@ type ApplicationConfig struct {
 
 type EnvConfig struct {
 	LogStorage struct {
-		Adapter string `yaml:"adapter"`
+		Driver string `yaml:"driver"`
 
 		// pg
 		ConnString string `yaml:"connString"`
@@ -148,8 +148,8 @@ func (app *Application) Brokers() []string {
 	return app.envConfig.LogStorage.Brokers
 }
 
-func (app *Application) LogStorageAdapter() string {
-	return app.envConfig.LogStorage.Adapter
+func (app *Application) LogStorageDriver() string {
+	return app.envConfig.LogStorage.Driver
 }
 
 func (app *Application) Name() string {
@@ -274,10 +274,10 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 	var consumer LogStorageConsumer
 	var err error
 
-	adapter := app.envConfig.LogStorage.Adapter
-	app.Log.Infof("Starting Adapter %s", adapter)
+	driver := app.envConfig.LogStorage.Driver
+	app.Log.Infof("Starting Log Storage with driver %s", driver)
 
-	switch adapter {
+	switch driver {
 	case "kafka":
 		producer, err = NewKafkaProducer(app)
 		if err != nil {
@@ -301,9 +301,9 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 		}
 
 	case "":
-		return nil, nil, fmt.Errorf("Missing logStorage adapter")
+		return nil, nil, fmt.Errorf("Missing logStorage driver")
 	default:
-		return nil, nil, fmt.Errorf("Unknown Log Storage Adapter %s", adapter)
+		return nil, nil, fmt.Errorf("Unknown Log Storage driver %s", driver)
 	}
 
 	err = producer.CreateTopics(app.appConfig.Topics)
