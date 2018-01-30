@@ -2,7 +2,7 @@ local json = require "cjson"
 local router = require "router"
 
 local ENV = os.getenv('SPACER_ENV')
-local INTERNAL_TOKEN = os.getenv('SPACER_INTERNAL_TOKEN')
+local INTERNAL_TOKEN = require "internal_token"
 
 local reject = function (status, body)
     ngx.status = status

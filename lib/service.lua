@@ -1,5 +1,5 @@
 local _M = {}
-local INTERNAL_TOKEN = os.getenv('SPACER_INTERNAL_TOKEN')
+local INTERNAL_TOKEN = require "internal_token"
 
 local json = require "cjson"
 

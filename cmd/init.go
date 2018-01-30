@@ -38,6 +38,7 @@ var initCmd = &cobra.Command{
 
 		err = series([]func() error{
 			func() error { return spacer.RestoreAssets(targetDir, "app") },
+			func() error { return spacer.RestoreAssets(targetDir, "lib") },
 			func() error { return spacer.RestoreAssets(targetDir, "bin") },
 			func() error { return spacer.RestoreAssets(targetDir, "config") },
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
