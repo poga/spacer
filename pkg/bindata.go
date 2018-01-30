@@ -6,6 +6,7 @@
 // lib/run.lua
 // lib/service.lua
 // lib/trace.lua
+// lib/uuid.lua
 // app/gateway.lua
 // app/hello.lua
 // app/lib/foo.lua
@@ -138,6 +139,24 @@ func libServiceLua() (*asset, error) {
 func libTraceLua() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/lib/trace.lua"
 	name := "lib/trace.lua"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// libUuidLua reads file data from disk. It returns an error on failure.
+func libUuidLua() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/lib/uuid.lua"
+	name := "lib/uuid.lua"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -426,6 +445,7 @@ var _bindata = map[string]func() (*asset, error){
 	"lib/run.lua": libRunLua,
 	"lib/service.lua": libServiceLua,
 	"lib/trace.lua": libTraceLua,
+	"lib/uuid.lua": libUuidLua,
 	"app/gateway.lua": appGatewayLua,
 	"app/hello.lua": appHelloLua,
 	"app/lib/foo.lua": appLibFooLua,
@@ -507,6 +527,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"run.lua": &bintree{libRunLua, map[string]*bintree{}},
 		"service.lua": &bintree{libServiceLua, map[string]*bintree{}},
 		"trace.lua": &bintree{libTraceLua, map[string]*bintree{}},
+		"uuid.lua": &bintree{libUuidLua, map[string]*bintree{}},
 	}},
 }}
 
