@@ -9,7 +9,6 @@
 // lib/uuid.lua
 // app/gateway.lua
 // app/hello.lua
-// app/lib/foo.lua
 // bin/start-production.sh
 // bin/start.sh
 // bin/test.sh
@@ -203,24 +202,6 @@ func appHelloLua() (*asset, error) {
 	return a, err
 }
 
-// appLibFooLua reads file data from disk. It returns an error on failure.
-func appLibFooLua() (*asset, error) {
-	path := "/Users/poga/projects/go/src/github.com/poga/spacer/app/lib/foo.lua"
-	name := "app/lib/foo.lua"
-	bytes, err := bindataRead(path, name)
-	if err != nil {
-		return nil, err
-	}
-
-	fi, err := os.Stat(path)
-	if err != nil {
-		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
-	}
-
-	a := &asset{bytes: bytes, info: fi}
-	return a, err
-}
-
 // binStartProductionSh reads file data from disk. It returns an error on failure.
 func binStartProductionSh() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/start-production.sh"
@@ -372,7 +353,6 @@ var _bindata = map[string]func() (*asset, error){
 	"lib/uuid.lua": libUuidLua,
 	"app/gateway.lua": appGatewayLua,
 	"app/hello.lua": appHelloLua,
-	"app/lib/foo.lua": appLibFooLua,
 	"bin/start-production.sh": binStartProductionSh,
 	"bin/start.sh": binStartSh,
 	"bin/test.sh": binTestSh,
@@ -423,9 +403,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"app": &bintree{nil, map[string]*bintree{
 		"gateway.lua": &bintree{appGatewayLua, map[string]*bintree{}},
 		"hello.lua": &bintree{appHelloLua, map[string]*bintree{}},
-		"lib": &bintree{nil, map[string]*bintree{
-			"foo.lua": &bintree{appLibFooLua, map[string]*bintree{}},
-		}},
 	}},
 	"appignore": &bintree{appignore, map[string]*bintree{}},
 	"bin": &bintree{nil, map[string]*bintree{
