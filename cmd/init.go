@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"html/template"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -40,7 +41,45 @@ var initCmd = &cobra.Command{
 			func() error { return spacer.RestoreAssets(targetDir, "app") },
 			func() error { return spacer.RestoreAssets(targetDir, "lib") },
 			func() error { return spacer.RestoreAssets(targetDir, "bin") },
-			func() error { return spacer.RestoreAssets(targetDir, "config") },
+			// func() error { return spacer.RestoreAssets(targetDir, "config") },
+
+			func() error { return os.Mkdir(filepath.Join(targetDir, "config"), os.ModePerm) },
+			func() error {
+				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.conf"), "config/nginx.conf", nginxConfigTmpl{true})
+			},
+			func() error {
+				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.production.conf"), "config/nginx.conf", nginxConfigTmpl{false})
+			},
+			func() error {
+				return writeFromTemplate(
+					filepath.Join(targetDir, "config", "env.development.yml"),
+					"config/env.yml",
+					envConfigTmpl{
+						"postgres",
+						"postgres://localhost/spacer-development?sslmode=disable",
+					},
+				)
+			},
+			func() error {
+				return writeFromTemplate(
+					filepath.Join(targetDir, "config", "env.production.yml"),
+					"config/env.yml",
+					envConfigTmpl{
+						"postgres",
+						"postgres://localhost/spacer-production",
+					},
+				)
+			},
+			func() error {
+				return writeFromTemplate(
+					filepath.Join(targetDir, "config", "env.test.yml"),
+					"config/env.yml",
+					envConfigTmpl{
+						"postgres",
+						"postgres://localhost/spacer-test?sslmode=disable",
+					},
+				)
+			},
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
@@ -85,6 +124,29 @@ func writeFile(to string, name string) error {
 		return err
 	}
 	return nil
+}
+
+type nginxConfigTmpl struct {
+	NoCache bool
+}
+
+type envConfigTmpl struct {
+	DefaultDriver     string
+	DefaultConnString string
+}
+
+func writeFromTemplate(to string, tmplFile string, data interface{}) error {
+	tmpl, err := template.ParseFiles(tmplFile)
+	if err != nil {
+		return err
+	}
+
+	out, err := os.Create(to)
+	if err != nil {
+		return err
+	}
+
+	return tmpl.Execute(out, data)
 }
 
 func series(funcs []func() error) error {
