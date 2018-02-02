@@ -18,7 +18,6 @@ import (
 
 func RunTest(host string, testPath string) error {
 	filepath.Walk(testPath, func(path string, info os.FileInfo, err error) error {
-		fmt.Printf("File: %s\n", path)
 
 		if info.IsDir() {
 			return nil
@@ -102,7 +101,6 @@ func NewTest(host string, path string) (Test, error) {
 		if !entering {
 			return 0
 		}
-		fmt.Printf("%v (%d) %v\n", node.Parent, node.Level, node.String())
 
 		if name, ok := MatchHeader(node, 1, "test"); ok {
 			t.Name = name
@@ -157,7 +155,6 @@ func NewTest(host string, path string) (Test, error) {
 		return 0
 	})
 
-	fmt.Printf("%v\n", t)
 	return t, nil
 }
 
