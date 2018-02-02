@@ -44,10 +44,13 @@ var initCmd = &cobra.Command{
 
 			func() error { return os.Mkdir(filepath.Join(targetDir, "config"), os.ModePerm) },
 			func() error {
-				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.conf"), "config/nginx.conf", nginxConfigTmpl{true})
+				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.development.conf"), "config/nginx.conf", nginxConfigTmpl{true})
 			},
 			func() error {
 				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.production.conf"), "config/nginx.conf", nginxConfigTmpl{false})
+			},
+			func() error {
+				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.test.conf"), "config/nginx.conf", nginxConfigTmpl{false})
 			},
 			func() error {
 				return writeFromTemplate(

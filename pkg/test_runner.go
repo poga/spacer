@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mndrix/tap-go"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
@@ -53,6 +54,8 @@ type Test struct {
 }
 
 func (t *Test) Run() error {
+	plan := tap.New()
+	plan.AutoPlan()
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		t.Method,
@@ -69,18 +72,14 @@ func (t *Test) Run() error {
 		return err
 	}
 
-	if resp.StatusCode != t.ExpectCode {
-		return fmt.Errorf("Got code %d, expect %d", resp.StatusCode, t.ExpectCode)
-	}
+	plan.Ok(resp.StatusCode == t.ExpectCode, fmt.Sprintf("Expect %d, got %d", t.ExpectCode, resp.StatusCode))
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 	bodyStr := strings.TrimSpace(string(body))
 
-	if bodyStr != t.ExpectBody {
-		return fmt.Errorf("Got body %s, expect %s", bodyStr, t.ExpectBody)
-	}
+	plan.Ok(bodyStr == t.ExpectBody, fmt.Sprintf("Expect body %s, got %s", t.ExpectBody, bodyStr))
 
 	return nil
 }

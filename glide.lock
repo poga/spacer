@@ -1,5 +1,5 @@
-hash: cfd325670d10d7c4cb5772f36b897fa3550f2895becbfd5f8ab1a17f4c45b8a5
-updated: 2018-01-04T21:32:42.144274+08:00
+hash: 83c311e8dcbd5f4ef103be2aa539208cb52d3a0b408c80aedbd1815c3133c986
+updated: 2018-02-02T16:18:35.852246+08:00
 imports:
 - name: github.com/confluentinc/confluent-kafka-go
   version: f696f02dcbb04d95b103c5b848bb15f749a996f7
@@ -21,8 +21,12 @@ imports:
   version: 83612a56d3dd153a94a629cd64925371c9adad78
   subpackages:
   - oid
+- name: github.com/mndrix/tap-go
+  version: 629fa407e90bbf3781e448e8e9b8931523ec823c
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/shurcooL/sanitized_anchor_name
+  version: 86672fcb3f950f35f2e675df2240550f2a50762f
 - name: github.com/sirupsen/logrus
   version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: github.com/spf13/cobra

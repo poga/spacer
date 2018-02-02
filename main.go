@@ -19,6 +19,8 @@ func init() {
 	switch strings.ToLower(os.Getenv("LOG_LEVEL")) {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
+	case "error":
+		log.SetLevel(log.ErrorLevel)
 	default:
 	}
 }
