@@ -1,0 +1,24 @@
+package: github.com/poga/spacer
+import:
+- package: github.com/confluentinc/confluent-kafka-go
+  version: ^0.11.0
+  subpackages:
+  - kafka
+- package: github.com/pkg/errors
+  version: ^0.8.0
+- package: github.com/sirupsen/logrus
+- package: github.com/spf13/cobra
+  version: ^0.0.1
+- package: github.com/hpcloud/tail
+  version: ^1.0.0
+  subpackages:
+  - '...'
+- package: github.com/jteeuwen/go-bindata
+  version: ^3.0.7
+  subpackages:
+  - '...'
+- package: github.com/lib/pq
+- package: github.com/go-yaml/yaml
+- package: gopkg.in/russross/blackfriday.v2
+  version: ^2.0.0
+- package: github.com/mndrix/tap-go

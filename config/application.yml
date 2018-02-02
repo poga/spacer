@@ -1,0 +1,22 @@
+spacerVersion: 1
+
+appName: SpacerHelloWorld
+
+topics:
+  # list the topics your application going to use
+  # Spacer will create these topics for you
+  # ex.
+  #   - users
+  #   - blogs
+
+events:
+  # list the topic events you want to listen, and the event listeners
+  # ex.
+  #   users:
+  #     APPEND:
+  #       - handler1
+  #       - handler2
+  #
+
+# consumerGroupID: spacer-$appName
+
