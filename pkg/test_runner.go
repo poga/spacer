@@ -55,7 +55,6 @@ type Test struct {
 
 func (t *Test) Run() error {
 	plan := tap.New()
-	plan.AutoPlan()
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		t.Method,
@@ -80,6 +79,7 @@ func (t *Test) Run() error {
 	bodyStr := strings.TrimSpace(string(body))
 
 	plan.Ok(bodyStr == t.ExpectBody, fmt.Sprintf("Expect body %s, got %s", t.ExpectBody, bodyStr))
+	plan.AutoPlan()
 
 	return nil
 }
