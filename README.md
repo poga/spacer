@@ -13,6 +13,8 @@ $ cd ~/spacer-hello
 $ ./bin/start.sh
 ```
 
+Then go to `http://localhost:3000/hello` to see spacer working.
+
 ## Develop
 
 ```

@@ -95,7 +95,7 @@ func NewEnvConfig(file string) (*EnvConfig, error) {
 
 	// defaults
 	if config.Delegator == "" {
-		config.Delegator = "http://localhost:9064"
+		config.Delegator = "http://localhost:3000"
 	}
 	if config.WriteProxyListen == "" {
 		config.WriteProxyListen = ":9065"

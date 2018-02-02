@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	spacer "github.com/poga/spacer/pkg"
@@ -80,6 +79,9 @@ var initCmd = &cobra.Command{
 					},
 				)
 			},
+			func() error {
+				return writeFile(filepath.Join(targetDir, "config", "application.yml"), "config/application.yml")
+			},
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "log"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
@@ -98,12 +100,6 @@ var initCmd = &cobra.Command{
 			},
 		})
 		if err != nil {
-			log.Fatal(err)
-		}
-
-		out, err := exec.Command("git", "init", targetDir).CombinedOutput()
-		if err != nil {
-			log.Infof(string(out))
 			log.Fatal(err)
 		}
 		return
