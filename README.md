@@ -1,6 +1,6 @@
 # Spacer
 
-Spacer is a serverless function platform. It will fundamentally change how you build business around technology and how you code.
+Spacer is a serverless function platform for a new way to build business around technology.
 
 ## Quickstart
 
