@@ -55,6 +55,7 @@ type Test struct {
 
 func (t *Test) Run() error {
 	plan := tap.New()
+	plan.Diagnosticf("%s", t.Url.Path)
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		t.Method,
