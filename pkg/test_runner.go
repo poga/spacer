@@ -71,14 +71,20 @@ func (t *Test) Run() error {
 		return err
 	}
 
-	plan.Ok(resp.StatusCode == t.ExpectCode, fmt.Sprintf("Expect %d, got %d", t.ExpectCode, resp.StatusCode))
+	plan.Ok(resp.StatusCode == t.ExpectCode, "status code")
+	if resp.StatusCode != t.ExpectCode {
+		plan.Diagnosticf("Expect %d, got %d", t.ExpectCode, resp.StatusCode)
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 	bodyStr := strings.TrimSpace(string(body))
 
-	plan.Ok(bodyStr == t.ExpectBody, fmt.Sprintf("Expect body %s, got %s", t.ExpectBody, bodyStr))
+	plan.Ok(bodyStr == t.ExpectBody, "body")
+	if bodyStr != t.ExpectBody {
+		plan.Diagnosticf("Expect body %s, got %s", t.ExpectBody, bodyStr)
+	}
 	plan.AutoPlan()
 
 	return nil
