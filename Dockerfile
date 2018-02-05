@@ -66,3 +66,13 @@ RUN wget -qO - http://packages.confluent.io/deb/4.0/archive.key | apt-key add - 
 
 # install spacer
 RUN go get github.com/poga/spacer
+
+RUN mkdir -p "/spacer" && chmod -R 777 /spacer
+WORKDIR /spacer
+
+COPY . .
+
+# replace spacer binary with the one built within the container
+RUN cp "$GOPATH/bin/spacer" bin/
+
+CMD ["./bin/start-production.sh"]
