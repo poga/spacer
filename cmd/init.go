@@ -31,11 +31,6 @@ var initCmd = &cobra.Command{
 			log.Fatal("Target Directory already exists")
 		}
 
-		self, err := os.Executable()
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		err = series([]func() error{
 			func() error { return spacer.RestoreAssets(targetDir, "app") },
 			func() error { return spacer.RestoreAssets(targetDir, "lib") },
@@ -86,21 +81,11 @@ var initCmd = &cobra.Command{
 				return writeFile(filepath.Join(targetDir, "config", "application.yml"), "config/application.yml")
 			},
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
+			func() error { return writeFile(filepath.Join(targetDir, "Dockerfile"), "Dockerfile") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "test"), os.ModePerm) },
 			func() error { return writeFile(filepath.Join(targetDir, "test/hello.t.md"), "hello.t.md") },
-			func() error {
-				data, err := ioutil.ReadFile(self)
-				if err != nil {
-					return err
-				}
-				err = ioutil.WriteFile(filepath.Join(targetDir, "bin/spacer"), data, os.ModePerm)
-				if err != nil {
-					return err
-				}
-				return nil
-			},
 		})
 		if err != nil {
 			log.Fatal(err)
