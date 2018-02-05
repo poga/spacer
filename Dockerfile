@@ -72,7 +72,4 @@ WORKDIR /spacer
 
 COPY . .
 
-# replace spacer binary with the one built within the container
-RUN cp "$GOPATH/bin/spacer" bin/
-
 CMD ["./bin/start-production.sh"]
