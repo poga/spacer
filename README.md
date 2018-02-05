@@ -4,7 +4,12 @@ Spacer is a serverless function platform for a new way to build business around 
 
 ## Quickstart
 
-Spacer depends on [OpenResty](https://openresty.org/). Follow the [offical guide](https://openresty.org/en/installation.html) to install.
+#### Install Dependencies
+
+* [OpenResty](https://openresty.org/)
+* [librdkafka](https://github.com/edenhill/librdkafka)
+
+#### Install Spacer
 
 ```
 $ go get github.com/poga/spacer
