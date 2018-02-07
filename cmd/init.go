@@ -120,7 +120,11 @@ type envConfigTmpl struct {
 }
 
 func writeFromTemplate(to string, tmplFile string, data interface{}) error {
-	tmpl, err := template.ParseFiles(tmplFile)
+	tmplData, err := spacer.Asset(tmplFile)
+	if err != nil {
+		return err
+	}
+	tmpl, err := template.New("tmp").Parse(string(tmplData))
 	if err != nil {
 		return err
 	}

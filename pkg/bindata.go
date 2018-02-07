@@ -10,11 +10,14 @@
 // app/gateway.lua
 // app/hello.lua
 // config/application.yml
+// config/env.yml
+// config/nginx.conf
 // bin/start-production.sh
 // bin/start.sh
 // bin/test.sh
 // appignore
 // hello.t.md
+// Dockerfile
 // DO NOT EDIT!
 
 package spacer
@@ -221,6 +224,42 @@ func configApplicationYml() (*asset, error) {
 	return a, err
 }
 
+// configEnvYml reads file data from disk. It returns an error on failure.
+func configEnvYml() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/env.yml"
+	name := "config/env.yml"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// configNginxConf reads file data from disk. It returns an error on failure.
+func configNginxConf() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/config/nginx.conf"
+	name := "config/nginx.conf"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
 // binStartProductionSh reads file data from disk. It returns an error on failure.
 func binStartProductionSh() (*asset, error) {
 	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/start-production.sh"
@@ -311,6 +350,24 @@ func helloTMd() (*asset, error) {
 	return a, err
 }
 
+// dockerfile reads file data from disk. It returns an error on failure.
+func dockerfile() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/Dockerfile"
+	name := "Dockerfile"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -373,11 +430,14 @@ var _bindata = map[string]func() (*asset, error){
 	"app/gateway.lua": appGatewayLua,
 	"app/hello.lua": appHelloLua,
 	"config/application.yml": configApplicationYml,
+	"config/env.yml": configEnvYml,
+	"config/nginx.conf": configNginxConf,
 	"bin/start-production.sh": binStartProductionSh,
 	"bin/start.sh": binStartSh,
 	"bin/test.sh": binTestSh,
 	"appignore": appignore,
 	"hello.t.md": helloTMd,
+	"Dockerfile": dockerfile,
 }
 
 // AssetDir returns the file names below a certain
@@ -420,6 +480,7 @@ type bintree struct {
 	Children map[string]*bintree
 }
 var _bintree = &bintree{nil, map[string]*bintree{
+	"Dockerfile": &bintree{dockerfile, map[string]*bintree{}},
 	"app": &bintree{nil, map[string]*bintree{
 		"gateway.lua": &bintree{appGatewayLua, map[string]*bintree{}},
 		"hello.lua": &bintree{appHelloLua, map[string]*bintree{}},
@@ -432,6 +493,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	}},
 	"config": &bintree{nil, map[string]*bintree{
 		"application.yml": &bintree{configApplicationYml, map[string]*bintree{}},
+		"env.yml": &bintree{configEnvYml, map[string]*bintree{}},
+		"nginx.conf": &bintree{configNginxConf, map[string]*bintree{}},
 	}},
 	"hello.t.md": &bintree{helloTMd, map[string]*bintree{}},
 	"lib": &bintree{nil, map[string]*bintree{
