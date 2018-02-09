@@ -24,7 +24,7 @@ Then go to `http://localhost:3000/hello` to see spacer working.
 
 ```
 $ git clone git@github.com:poga/spacer.git
-$ make
+$ make && go install
 ```
 
 ## License
