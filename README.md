@@ -2,11 +2,9 @@
 
 Spacer is a serverless function platform for a new way to build businesses around technology.
 
-Spacer is designed to be **minimal** and **simple**. You don't need a Kubernetes cluster to start using Spacer. The architecture is simple enough to run on any typical PaaS such as [Heroku](https://www.heroku.com/).
+Spacer is designed to be **minimal** and **simple**. Its architecture is simple enough to run on any typical PaaS such as [Heroku](https://www.heroku.com/) or on a kubernetes cluster.
 
 Spacer provides a fast **edit-save-reload** development cycle. No redeployment or rebuilding image is needed.
-
-Spacer focus on the core benefit of serverless technology: **aggressive code reuse**, **pay per function resource usage**, and **NoOps**.
 
 ## Install
 
@@ -35,7 +33,38 @@ $ ./bin/start.sh
 
 Open `http://localhost:3000/hello` and you should see spacer working.
 
-## Develop
+### Function
+
+Functions in spacer are written in Lua, a simple dynamic langauge. Here's a hello world function:
+
+```lua
+local G = function (event, ctx)
+    return "Hello from Spacer!"
+end
+
+return G
+```
+
+Every function takes two arguments: `event`, and `ctx`.
+
+### Test
+
+Spacer have built-in test framework. Run all tests with command `./bin/test.sh`.
+
+```
+$ ./bin/test.sh
+1..1
+# Started on Mon Feb 12 17:46:48 2018
+# Starting class: testT
+ok     1	testT.test_ret
+# Ran 1 tests in 0.000 seconds, 1 success, 0 failures
+```
+
+Check `/test/test_hello.lua` for example.
+
+## Contribute
+
+Build spacer from source:
 
 ```
 $ git clone git@github.com:poga/spacer.git
