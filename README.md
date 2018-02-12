@@ -61,7 +61,7 @@ ok     1	testT.test_ret
 # Ran 1 tests in 0.000 seconds, 1 success, 0 failures
 ```
 
-Check `/test/test_hello.lua` for example.
+Check `test/test_hello.lua` for example.
 
 ## Contribute
 
