@@ -1,6 +1,3 @@
 #!/bin/bash
-trap "exit" INT TERM ERR
-trap "kill 0" EXIT
 
-openresty -p `pwd`/ -c `pwd`/config/nginx.test.conf &
-LOG_LEVEL=error spacer test .
+find test/*.lua | xargs -n 1 -I {} resty -I lib/ -I app/ {} -o tap

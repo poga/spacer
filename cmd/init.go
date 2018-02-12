@@ -85,7 +85,7 @@ var initCmd = &cobra.Command{
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "temp"), os.ModePerm) },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "test"), os.ModePerm) },
-			func() error { return writeFile(filepath.Join(targetDir, "test/hello.t.md"), "hello.t.md") },
+			func() error { return writeFile(filepath.Join(targetDir, "test/test_hello.lua"), "test_hello.lua") },
 		})
 		if err != nil {
 			log.Fatal(err)
