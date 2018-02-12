@@ -38,7 +38,7 @@ Open `http://localhost:3000/hello` and you should see spacer working.
 Functions in spacer are written in Lua, a simple dynamic langauge. Here's a hello world function:
 
 ```lua
-# app/hello.lua
+-- app/hello.lua
 local G = function (event, ctx)
     return "Hello from Spacer!"
 end
