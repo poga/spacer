@@ -73,5 +73,7 @@ $ make && go install
 
 ## License
 
-The MIT License
+* `lib/luaunit.lua`: BSD License, Copyright (c) 2005-2014, Philippe Fremy <phil at freehackers dot org>
+* `lib/uuid.lua`: MIT, Thibault Charbonnier
+* Everything else: [MIT](./LICENSE)
 
