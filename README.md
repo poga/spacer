@@ -65,7 +65,7 @@ Check `test/test_hello.lua` for example.
 
 ## Contribute
 
-Build spacer from source:
+To build spacer from source:
 
 ```
 $ git clone git@github.com:poga/spacer.git

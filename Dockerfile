@@ -72,4 +72,4 @@ WORKDIR /spacer
 
 COPY . .
 
-CMD ["./bin/start-production.sh"]
+CMD ["./bin/prod.sh"]

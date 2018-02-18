@@ -13,8 +13,8 @@
 // config/application.yml
 // config/env.yml
 // config/nginx.conf
-// bin/start-production.sh
-// bin/start.sh
+// bin/dev.sh
+// bin/prod.sh
 // bin/test.sh
 // appignore
 // Dockerfile
@@ -279,10 +279,10 @@ func configNginxConf() (*asset, error) {
 	return a, err
 }
 
-// binStartProductionSh reads file data from disk. It returns an error on failure.
-func binStartProductionSh() (*asset, error) {
-	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/start-production.sh"
-	name := "bin/start-production.sh"
+// binDevSh reads file data from disk. It returns an error on failure.
+func binDevSh() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/dev.sh"
+	name := "bin/dev.sh"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -297,10 +297,10 @@ func binStartProductionSh() (*asset, error) {
 	return a, err
 }
 
-// binStartSh reads file data from disk. It returns an error on failure.
-func binStartSh() (*asset, error) {
-	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/start.sh"
-	name := "bin/start.sh"
+// binProdSh reads file data from disk. It returns an error on failure.
+func binProdSh() (*asset, error) {
+	path := "/Users/poga/projects/go/src/github.com/poga/spacer/bin/prod.sh"
+	name := "bin/prod.sh"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -452,8 +452,8 @@ var _bindata = map[string]func() (*asset, error){
 	"config/application.yml": configApplicationYml,
 	"config/env.yml": configEnvYml,
 	"config/nginx.conf": configNginxConf,
-	"bin/start-production.sh": binStartProductionSh,
-	"bin/start.sh": binStartSh,
+	"bin/dev.sh": binDevSh,
+	"bin/prod.sh": binProdSh,
 	"bin/test.sh": binTestSh,
 	"appignore": appignore,
 	"Dockerfile": dockerfile,
@@ -507,8 +507,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	}},
 	"appignore": &bintree{appignore, map[string]*bintree{}},
 	"bin": &bintree{nil, map[string]*bintree{
-		"start-production.sh": &bintree{binStartProductionSh, map[string]*bintree{}},
-		"start.sh": &bintree{binStartSh, map[string]*bintree{}},
+		"dev.sh": &bintree{binDevSh, map[string]*bintree{}},
+		"prod.sh": &bintree{binProdSh, map[string]*bintree{}},
 		"test.sh": &bintree{binTestSh, map[string]*bintree{}},
 	}},
 	"config": &bintree{nil, map[string]*bintree{
