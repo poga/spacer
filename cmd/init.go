@@ -53,7 +53,7 @@ var initCmd = &cobra.Command{
 					"config/env.yml",
 					envConfigTmpl{
 						"postgres",
-						"postgres://localhost/spacer-development?sslmode=disable",
+						"postgres://localhost/spacer_development?sslmode=disable",
 					},
 				)
 			},
@@ -63,7 +63,7 @@ var initCmd = &cobra.Command{
 					"config/env.yml",
 					envConfigTmpl{
 						"postgres",
-						"postgres://localhost/spacer-production",
+						"postgres://localhost/spacer_production",
 					},
 				)
 			},
@@ -73,7 +73,7 @@ var initCmd = &cobra.Command{
 					"config/env.yml",
 					envConfigTmpl{
 						"postgres",
-						"postgres://localhost/spacer-test?sslmode=disable",
+						"postgres://localhost/spacer_test?sslmode=disable",
 					},
 				)
 			},
