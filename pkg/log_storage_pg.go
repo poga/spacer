@@ -47,7 +47,8 @@ func (p *PGProducer) CreateTopics(topics []string) error {
 		CREATE TABLE IF NOT EXISTS topic_%s (
 			msg_offset BIGSERIAL PRIMARY KEY,
 			key TEXT NOT NULL,
-			value TEXT NOT NULL
+			value TEXT NOT NULL,
+			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 		)`, topic))
 
 		if err != nil {
