@@ -28,7 +28,7 @@ $ go get -u github.com/poga/spacer
 ```
 $ spacer init ~/spacer-hello
 $ cd ~/spacer-hello
-$ ./bin/start.sh
+$ ./bin/dev.sh
 ```
 
 Open `http://localhost:3000/hello` and you should see spacer working.
