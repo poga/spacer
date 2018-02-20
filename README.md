@@ -1,8 +1,6 @@
 # Spacer
 
-Spacer is a serverless function platform for a new way to build businesses around technology.
-
-Spacer is designed to be **minimal** and **simple**. Its architecture is simple enough to run on a PaaS such as [Heroku](https://www.heroku.com/) or on a kubernetes cluster.
+Spacer provides a new way to build businesses around technology.
 
 Spacer provides a fast **edit-save-reload** development cycle. No redeployment or rebuilding image is needed.
 
