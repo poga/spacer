@@ -2,7 +2,7 @@
 
 Spacer is a serverless function platform for a new way to build businesses around technology.
 
-Spacer is designed to be **minimal** and **simple**. Its architecture is simple enough to run on any typical PaaS such as [Heroku](https://www.heroku.com/) or on a kubernetes cluster.
+Spacer is designed to be **minimal** and **simple**. Its architecture is simple enough to run on a PaaS such as [Heroku](https://www.heroku.com/) or on a kubernetes cluster.
 
 Spacer provides a fast **edit-save-reload** development cycle. No redeployment or rebuilding image is needed.
 
@@ -33,20 +33,20 @@ $ ./bin/dev.sh
 
 Open `http://localhost:3000/hello` and you should see spacer working.
 
-### Function
+### Hello World
 
 Functions in spacer are written in Lua, a simple dynamic langauge. Here's a hello world function:
 
 ```lua
 -- app/hello.lua
-local G = function (event, ctx)
+local G = function (data, context)
     return "Hello from Spacer!"
 end
 
 return G
 ```
 
-Every function takes two arguments: `event`, and `ctx`.
+Every function takes two arguments: `data` and `context`. For detail, check the **Functions** section.
 
 ### Test
 
@@ -61,7 +61,72 @@ ok     1	testT.test_ret
 # Ran 1 tests in 0.000 seconds, 1 success, 0 failures
 ```
 
-Check `test/test_hello.lua` for example.
+See `test/test_hello.lua` for example.
+
+## Functions
+
+Code in spacer are organized by functions. For now, spacer only support [Lua](https://www.lua.org/) as the programming language.
+
+With Lua, you can write non-blocking, asynchronous function in synchronous flavor. Thanks to Lua's coroutine and OpenResty's cosocket.
+
+```lua
+local G = function (data, ctx)
+  local http = require "resty.http"
+  local httpc = http.new()
+
+  -- this is actually non-blocking
+  local res, err = httpc:request_uri("http://example.com/helloworld")
+  -- the second request will wait for the first request to finish
+  local res, err = httpc:request_uri("http://example.com/helloworld2")
+end
+```
+
+There are 2 way to invoke a function. The first is the simplest: just call it like a normal lua function.
+
+```lua
+-- app/bar.lua
+local G = function (data, ctx)
+  return data.val + 42
+end
+
+-- app/foo.lua
+local bar = require "bar"
+
+local G = function (data, ctx)
+  return 100 + bar({val = 1}) -- returns 143
+end
+```
+
+The second way is use `service.call`, which emulate a http request between two function. It's useful when you want to create seperated tracings for two function.
+
+```lua
+local service = require "service"
+
+local G = function (data, ctx)
+  return service.call("bar", {val = 1}) -- returns 143
+end
+```
+
+#### Error handling
+
+There are two kind of error in spacer: **error** and **Fatal**.
+
+An **error** is corresponding to http 4xx status code: something went wrong on the client side. To return an error, just call `ctx.error`.
+
+```lua
+local G = function (data, ctx)
+  ctx.error("Invalid Password")
+end
+```
+
+A **fatal** is corresponding too http 5xx status code: the server goes wrong. call `ctx.fatal` to return a fatal.
+```lua
+local G = function (data, ctx)
+  ctx.fatal("DB not available")
+end
+```
+
+All uncaught exceptions are **fatal**.
 
 ## Contribute
 
@@ -69,7 +134,8 @@ To build spacer from source:
 
 ```
 $ git clone git@github.com:poga/spacer.git
-$ make && go install
+$ make
+$ go install  // if you want to put it into your path
 ```
 
 ## License
