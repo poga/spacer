@@ -1,4 +1,4 @@
-local G = function (event, ctx)
+local G = function (data, ctx)
     return "Hello from Spacer!"
 end
 

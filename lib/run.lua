@@ -41,9 +41,9 @@ if not ok then
 end
 
 local body = ngx.req.get_body_data()
-local event = {}
+local data = {}
 if body then
-    event.body = json.decode(body)
+    data = json.decode(body)
 end
 
 local context = {}
@@ -56,7 +56,7 @@ function context.fatal (err)
     error(err)
 end
 
-local ok, ret = pcall(func, event, context)
+local ok, ret = pcall(func, data, context)
 
 if not ok then
     if ret.t == "error" then -- user error
