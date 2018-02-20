@@ -39,14 +39,14 @@ Functions in spacer are written in Lua, a simple dynamic langauge. Here's a hell
 
 ```lua
 -- app/hello.lua
-local G = function (data, context)
+local G = function (params, context)
     return "Hello from Spacer!"
 end
 
 return G
 ```
 
-Every function takes two arguments: `data` and `context`. For detail, check the **Functions** section.
+Every function takes two arguments: `params` and `context`. For detail, check the **Functions** section.
 
 ### Test
 
@@ -67,32 +67,18 @@ See `test/test_hello.lua` for example.
 
 Code in spacer are organized by functions. For now, spacer only support [Lua](https://www.lua.org/) as the programming language.
 
-With Lua, you can write non-blocking, asynchronous function in synchronous flavor. Thanks to Lua's coroutine and OpenResty's cosocket.
-
-```lua
-local G = function (data, ctx)
-  local http = require "resty.http"
-  local httpc = http.new()
-
-  -- this is actually non-blocking
-  local res, err = httpc:request_uri("http://example.com/helloworld")
-  -- the second request will wait for the first request to finish
-  local res, err = httpc:request_uri("http://example.com/helloworld2")
-end
-```
-
 There are 2 way to invoke a function. The first is the simplest: just call it like a normal lua function.
 
 ```lua
 -- app/bar.lua
-local G = function (data, ctx)
-  return data.val + 42
+local G = function (params, ctx)
+  return params.val + 42
 end
 
 -- app/foo.lua
 local bar = require "bar"
 
-local G = function (data, ctx)
+local G = function (params, ctx)
   return 100 + bar({val = 1}) -- returns 143
 end
 ```
@@ -102,7 +88,7 @@ The second way is use `service.call`, which emulate a http request between two f
 ```lua
 local service = require "service"
 
-local G = function (data, ctx)
+local G = function (params, ctx)
   return service.call("bar", {val = 1}) -- returns 143
 end
 ```
@@ -114,19 +100,35 @@ There are two kind of error in spacer: **error** and **Fatal**.
 An **error** is corresponding to http 4xx status code: something went wrong on the caller side. To return an error, just call `ctx.error`.
 
 ```lua
-local G = function (data, ctx)
+local G = function (params, ctx)
   ctx.error("Invalid Password")
 end
 ```
 
 A **fatal** is corresponding too http 5xx status code: the function itself goes wrong (and it's not recoverable). call `ctx.fatal` to return a fatal.
 ```lua
-local G = function (data, ctx)
+local G = function (params, ctx)
   ctx.fatal("DB not available")
 end
 ```
 
 All uncaught exceptions are **fatal**.
+
+#### Async
+
+With Lua, you can write non-blocking, asynchronous function in synchronous flavor. Thanks to Lua's coroutine and OpenResty's cosocket.
+
+```lua
+local G = function (params, ctx)
+  local http = require "resty.http"
+  local httpc = http.new()
+
+  -- this is actually non-blocking
+  local res, err = httpc:request_uri("http://example.com/helloworld")
+  -- the second request will wait for the first request to finish
+  local res, err = httpc:request_uri("http://example.com/helloworld2")
+end
+```
 
 ## Contribute
 
