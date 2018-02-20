@@ -111,7 +111,7 @@ end
 
 There are two kind of error in spacer: **error** and **Fatal**.
 
-An **error** is corresponding to http 4xx status code: something went wrong on the client side. To return an error, just call `ctx.error`.
+An **error** is corresponding to http 4xx status code: something went wrong on the caller side. To return an error, just call `ctx.error`.
 
 ```lua
 local G = function (data, ctx)
@@ -119,7 +119,7 @@ local G = function (data, ctx)
 end
 ```
 
-A **fatal** is corresponding too http 5xx status code: the server goes wrong. call `ctx.fatal` to return a fatal.
+A **fatal** is corresponding too http 5xx status code: the function itself goes wrong (and it's not recoverable). call `ctx.fatal` to return a fatal.
 ```lua
 local G = function (data, ctx)
   ctx.fatal("DB not available")
