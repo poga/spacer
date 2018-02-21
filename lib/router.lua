@@ -8,7 +8,7 @@ local router = function (method, path)
     end
 
     for i, route in ipairs(route) do
-        if route[1] == method and route[2] == path then
+        if route[1] == method and string.match(path, '^' .. route[2] .. '$') ~= nil then
             module = route[3]
         end
     end
