@@ -1,8 +1,8 @@
 # Spacer
 
-Spacer provides a new way to build businesses around technology.
+A new way to build business around technology and to code. Includes:
 
-Spacer provides a fast **edit-save-reload** development cycle. No redeployment or rebuilding image is needed.
+* fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
 
 ## Install
 
