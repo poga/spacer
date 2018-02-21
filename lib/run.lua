@@ -1,5 +1,6 @@
 local json = require "cjson"
-local router = require "router"
+local route = require "route"
+local context = require "context"
 
 local ENV = os.getenv('SPACER_ENV')
 local INTERNAL_TOKEN = require "internal_token"
@@ -12,18 +13,46 @@ end
 
 ngx.req.read_body()
 
-local module = nil
+local tmp = {func_path = nil, params = nil}
+local R = route(function(func_path)
+    tmp.func_path = func_path
+    return function (params)
+        tmp.params = params
+    end
+end)
 
--- check if this is a request from spacer within
-if ngx.req.get_uri_args()["spacer_internal_token"] == INTERNAL_TOKEN then
-    module = ngx.var.uri
-else
-    module = router(ngx.var.request_method, ngx.var.uri)
+local uri = ngx.var.uri
+-- remove trailing slash
+if string.sub(uri, -1) == '/' then
+    uri = string.sub(uri, 0, -2)
 end
 
-if module == nil then return reject(404, {["error"] = "not found"}) end
+-- parse request json body
+local body = ngx.req.get_body_data()
+local params = {}
+if body then
+    params = json.decode(body)
+end
 
-local ok, func = pcall(require, module)
+-- check if this is an internal request
+if ngx.req.get_uri_args()["spacer_internal_token"] == INTERNAL_TOKEN then
+    -- if it's an internal request, skip router and call the specified function directly
+    tmp.func_path = ngx.var.uri
+else
+    local ok, errmsg = R:execute(
+       ngx.var.request_method,
+       uri,
+       ngx.req.get_uri_args(),  -- all these parameters
+       params)         -- into a single "params" table
+
+    if not ok then
+        reject(404, {["error"] = "not found"})
+    end
+end
+
+if tmp.func_path == nil then return reject(404, {["error"] = "not found"}) end
+
+local ok, func = pcall(require, tmp.func_path)
 if not ok then
     -- `func` will be the error message if error occured
     ngx.log(ngx.ERR, func)
@@ -40,23 +69,7 @@ if not ok then
     return reject(status, {["error"] = func})
 end
 
-local body = ngx.req.get_body_data()
-local params = {}
-if body then
-    params = json.decode(body)
-end
-
-local context = {}
-
-function context.error (err)
-    error({t = "error", err = err})
-end
-
-function context.fatal (err)
-    error(err)
-end
-
-local ok, ret = pcall(func, params, context)
+local ok, ret = pcall(func, tmp.params, context)
 
 if not ok then
     if ret.t == "error" then -- user error
