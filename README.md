@@ -23,8 +23,15 @@ $ go get -u github.com/poga/spacer
 
 ## Quick Start
 
+Create a spacer project:
+
 ```
 $ spacer init ~/spacer-hello
+```
+
+Start the development server:
+
+```
 $ cd ~/spacer-hello
 $ ./bin/dev.sh
 ```
@@ -112,21 +119,35 @@ end
 
 All uncaught exceptions are **fatal**.
 
-#### Async
+## Event, Trigger, and Kappa Architecture
 
-With Lua, you can write non-blocking, asynchronous function in synchronous flavor. Thanks to Lua's coroutine and OpenResty's cosocket.
+Serverless programming is about events. Fuctions are working together through a series of events.
+
+Spacer use [Kappa Architecture](http://kappa-architecture.com) to provide a unified architecture for both events and data storage.
+
+#### Event and Topic
+
+Events are organized with topics. Topics need to be defined in the config `config/application.yml`.
+
+To emit a event, use the built-in `topics` library.
 
 ```lua
-local G = function (params, ctx)
-  local http = require "resty.http"
-  local httpc = http.new()
+local topics = require "topics"
 
-  -- this is actually non-blocking
-  local res, err = httpc:request_uri("http://example.com/helloworld")
-  -- the second request will wait for the first request to finish
-  local res, err = httpc:request_uri("http://example.com/helloworld2")
+local G = function (params, ctx)
+  topics.append("EVENT_NAME", { [EVENT_KEY] = EVENT_PAYLOAD })
 end
+
+return G
 ```
+
+#### Trigger
+
+Triggers are just functions. You can set a function as a trigger by setting them in the config `config/application.yml`.
+
+#### Log, Kappa Architecture, and Replay
+
+Events in spacer are actually permanently store in the specified storage (by default we use PostgreSQL as storage).
 
 ## Contribute
 
@@ -140,7 +161,8 @@ $ go install  // if you want to put it into your path
 
 ## License
 
-* `lib/luaunit.lua`: BSD License, Copyright (c) 2005-2014, Philippe Fremy <phil at freehackers dot org>
+* `lib/luaunit.lua`: BSD License, Philippe Fremy
 * `lib/uuid.lua`: MIT, Thibault Charbonnier
+* `lib/router.lua`: MIT
 * Everything else: [MIT](./LICENSE)
 
