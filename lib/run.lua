@@ -38,6 +38,9 @@ end
 if ngx.req.get_uri_args()["spacer_internal_token"] == INTERNAL_TOKEN then
     -- if it's an internal request, skip router and call the specified function directly
     tmp.func_path = ngx.var.uri
+elseif string.sub(ngx.var.uri, 0, 8) == '/private' then
+    -- also skip router if it's a private path (protected by nginx)
+    tmp.func_path = ngx.var.uri
 else
     local ok, errmsg = R:execute(
        ngx.var.request_method,

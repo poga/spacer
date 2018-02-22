@@ -47,7 +47,7 @@ type Application struct {
 	appConfig       *ApplicationConfig
 	envConfig       *EnvConfig
 	Log             *log.Entry
-	Routes          map[Event][]*url.URL
+	Triggers        map[Event][]*url.URL
 	WorkerPool      *Pool
 	ConsumerGroupID string
 }
@@ -115,33 +115,31 @@ func NewApplication(configPath string, configName string, env string) (*Applicat
 		return nil, err
 	}
 
-	router := make(map[Event][]*url.URL)
+	triggers := make(map[Event][]*url.URL)
 
 	for topic, handlers := range appConfig.Events {
-		for event, functionName := range handlers {
-			routing := GetRouteEvent(topic, event)
-			if _, ok := router[routing]; !ok {
-				router[routing] = make([]*url.URL, 0)
+		for eventName, functions := range handlers {
+			event := normalizeEventName(topic, eventName)
+			if _, ok := triggers[event]; !ok {
+				triggers[event] = make([]*url.URL, 0)
 			}
 
-			url, err := url.Parse(fmt.Sprintf("%s/%s", envConfig.Delegator, functionName))
-			if err != nil {
-				return nil, err
-			}
+			for _, functionName := range functions {
+				url, err := url.Parse(fmt.Sprintf("%s/%s", envConfig.Delegator, functionName))
+				if err != nil {
+					return nil, err
+				}
 
-			router[routing] = append(router[routing], url)
+				triggers[event] = append(triggers[event], url)
+			}
 		}
 	}
 	logger := log.WithFields(log.Fields{"appName": appConfig.AppName})
 	consumerGroupID := strings.Replace(appConfig.ConsumerGroupID, "$appName", appConfig.AppName, -1)
-	app := &Application{appConfig, envConfig, logger, router, nil, consumerGroupID}
+	app := &Application{appConfig, envConfig, logger, triggers, nil, consumerGroupID}
 	app.WorkerPool = NewPool(app.InvokeFunc)
 
 	return app, nil
-}
-
-func GetRouteEvent(object string, eventType string) Event {
-	return Event(fmt.Sprintf("%s:%s", object, strings.ToUpper(eventType)))
 }
 
 func (app *Application) Brokers() []string {
@@ -208,17 +206,17 @@ func (app *Application) invoke(url *url.URL, data []byte) error {
 
 // For WorkerPool
 func (app *Application) InvokeFunc(msg Message) error {
-	routePath := GetRouteEvent(string(*msg.Topic), "APPEND")
-	app.Log.Debugf("Looking up route %s", routePath)
+	event := normalizeEventName(string(*msg.Topic), "APPEND")
+	app.Log.Debugf("Looking for triggers on event %s", event)
 
-	if _, ok := app.Routes[routePath]; !ok {
-		app.Log.Debugf("Route not found")
+	if _, ok := app.Triggers[event]; !ok {
+		app.Log.Debugf("No triggers found")
 	}
 
-	for _, fn := range app.Routes[routePath] {
+	for _, fn := range app.Triggers[event] {
 		err := app.invoke(fn, []byte(string(msg.Value)))
 		if err != nil {
-			app.Log.WithField("route", app.Routes[routePath]).Errorf("Invocation Error: %v", err)
+			app.Log.WithField("function", app.Triggers[event]).Errorf("Invocation Error: %v", err)
 			return err
 		}
 	}
@@ -313,4 +311,8 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 
 	return producer, consumer, nil
 
+}
+
+func normalizeEventName(topic string, event string) Event {
+	return Event(fmt.Sprintf("%s:%s", topic, strings.ToUpper(event)))
 }
