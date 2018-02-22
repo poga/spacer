@@ -105,12 +105,20 @@ func NewEnvConfig(file string) (*EnvConfig, error) {
 	return &config, nil
 }
 
-func NewApplication(configPath string, configName string, env string) (*Application, error) {
-	appConfig, err := NewApplicationConfig(filepath.Join(configPath, "config", "application.yml"))
+func NewApplication(projectPath string, env string, envConfigName string) (*Application, error) {
+	appConfig, err := NewApplicationConfig(filepath.Join(projectPath, "config", "application.yml"))
 	if err != nil {
 		return nil, err
 	}
-	envConfig, err := NewEnvConfig(filepath.Join(configPath, "config", fmt.Sprintf("env.%s.yml", env)))
+
+	var envConfigPath = ""
+	if envConfigName == "" {
+		envConfigPath = filepath.Join(projectPath, "config", fmt.Sprintf("env.%s.yml", env))
+	} else {
+		envConfigPath = filepath.Join(projectPath, "config", envConfigName)
+	}
+
+	envConfig, err := NewEnvConfig(envConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +232,7 @@ func (app *Application) InvokeFunc(msg Message) error {
 	return nil
 }
 
-func (app *Application) Start(readyChan chan int) error {
+func (app *Application) Start(readyChan chan int, withWriteProxy bool) error {
 	producer, consumer, err := app.createProducerAndConsumer()
 	if err != nil {
 		app.Log.Fatalf("Failed to create producer or consumer: %s", err)
@@ -238,13 +246,15 @@ func (app *Application) Start(readyChan chan int) error {
 		}
 	}()
 
-	// create a proxy to let functions write data back to kafka
-	writeProxy, err := NewWriteProxy(app, producer.ProduceChannel())
-	if err != nil {
-		app.Log.Fatal(err)
+	if withWriteProxy {
+		// create a proxy to let functions write data back to kafka
+		writeProxy, err := NewWriteProxy(app, producer.ProduceChannel())
+		if err != nil {
+			app.Log.Fatal(err)
+		}
+		go http.ListenAndServe(app.envConfig.WriteProxyListen, writeProxy)
+		app.Log.WithField("listen", app.envConfig.WriteProxyListen).Infof("Write Proxy Started")
 	}
-	go http.ListenAndServe(app.envConfig.WriteProxyListen, writeProxy)
-	app.Log.WithField("listen", app.envConfig.WriteProxyListen).Infof("Write Proxy Started")
 
 	app.Log.WithField("groupID", app.ConsumerGroupID).Infof("Consumer Started")
 

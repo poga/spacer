@@ -9,6 +9,6 @@ openresty -p `pwd`/ -c `pwd`/config/nginx.development.conf | awk '
   /\[200\]/{print "\033[32m" $0 "\033[39m"; next}
   1 {print "\033[31m" $0 "\033[39m"; next}
 ' &
-spacer start . development &
+spacer start . --env development &
 
 wait
