@@ -88,15 +88,17 @@ local G = function (params, ctx)
 end
 ```
 
-The second way is use `service.call`, which emulate a http request between two function. It's useful when you want to create seperated tracings for two function.
+The second way is use `flow.call`, which emulate a http request between two function. It's useful when you want to create seperated tracings for two function.
 
 ```lua
-local service = require "service"
+local flow = require "flow"
 
 local G = function (params, ctx)
-  return service.call("bar", {val = 1}) -- returns 143
+  return flow.call("bar", {val = 1}) -- returns 143
 end
 ```
+
+It's called **flow** since the primary usage of it is to trace the flow between functions.
 
 #### Error handling
 

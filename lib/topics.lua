@@ -1,10 +1,10 @@
 local _M = {}
 local json = require "cjson"
-local service = require "service"
+local flow = require "flow"
 
 -- entries is a hash table
 _M.append = function (topic, entries)
-    return service.call(
+    return flow.call(
         "append_log_proxy/" .. topic,
         {topic = topic, entries = entries}
     )
