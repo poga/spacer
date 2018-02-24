@@ -149,7 +149,23 @@ Triggers are just functions. You can set a function as a trigger by setting them
 
 #### Log, Kappa Architecture, and Replay
 
-Events in spacer are actually permanently store in the specified storage (by default we use PostgreSQL as storage).
+Events in spacer are permanently stored in the specified storage (by default we use PostgreSQL as storage).
+
+## Libraries Search Path
+
+You can require lua module under `app/` and `lib/` directly.
+
+```lua
+-- requiring app/foo.lua
+local m = require "foo"
+```
+
+Directories can be used to organize your modules.
+
+```lua
+-- requiring app/models/foo.lua
+local m = require "models/foo"
+```
 
 ## Contribute
 
