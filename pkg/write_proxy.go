@@ -39,7 +39,7 @@ func (p WriteProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Value: value,
 		}
 	}
-	fmt.Fprintf(w, "ok")
+	fmt.Fprintf(w, "{\"result\": \"ok\"}")
 }
 
 type WriteRequest struct {
