@@ -15,8 +15,8 @@ ngx.req.read_body()
 
 local tmp = {func_path = nil, params = nil}
 local R = route(function(func_path)
-    tmp.func_path = func_path
     return function (params)
+        tmp.func_path = func_path
         tmp.params = params
     end
 end)
