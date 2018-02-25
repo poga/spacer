@@ -1,6 +1,6 @@
 # Spacer
 
-A new way to build business around technology and to code. Includes:
+A new way to build business around technology and to code.
 
 * Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). You can write high-performance non-blocking functions with simple language.
 * Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
