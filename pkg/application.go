@@ -273,8 +273,6 @@ func (app *Application) Start(readyChan chan int, withWriteProxy bool) error {
 		}
 		app.Invoke(*msg)
 	}
-
-	return nil
 }
 
 func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStorageConsumer, error) {
