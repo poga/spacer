@@ -1,24 +1,55 @@
 local json = require "cjson"
 local route = require "route"
+local reject = require "reject"
 
-local ENV = os.getenv('SPACER_ENV')
+local ENV = os.getenv("SPACER_ENV")
 local INTERNAL_TOKEN = require "internal_token"
 
-local reject = function (status, body)
-    ngx.status = status
-    ngx.say(json.encode(body))
-    ngx.exit(ngx.HTTP_OK)
+local run = function (func_path, params)
+    if func_path == nil then return reject(404, {["error"] = "not found"}) end
+
+    local ok, func = pcall(require, func_path)
+    if not ok then
+        -- `func` will be the error message if error occured
+        ngx.log(ngx.ERR, func)
+        local status = nil
+        if string.find(func, "not found") then
+            status = 404
+        else
+            status = 500
+        end
+        if ENV == 'production' then
+            func = 'Internal Server Error'
+        end
+
+        return reject(status, {["error"] = func})
+    end
+
+    local ok, ret, err = pcall(func, params)
+
+    if not ok then
+        -- unknown exception thown by error()
+        ngx.log(ngx.ERR, ret)
+        if ENV == 'production' then
+            ret = 'We\'re sorry, something went wrong'
+        end
+        return reject(500, {["error"] = ret})
+    end
+
+    -- function returned the second result as error
+    if err then
+        ngx.log(ngx.ERR, err)
+        return reject(400, {["error"] = err})
+    end
+
+    ngx.say(json.encode({data = ret}))
+end
+
+route.handler = function (func_path, params)
+    run(func_path, params)
 end
 
 ngx.req.read_body()
-
-local tmp = {func_path = nil, params = nil}
-local R = route(function(func_path)
-    return function (params)
-        tmp.func_path = func_path
-        tmp.params = params
-    end
-end)
 
 local uri = ngx.var.uri
 -- remove trailing slash
@@ -36,12 +67,12 @@ end
 -- check if this is an internal request
 if ngx.req.get_uri_args()["spacer_internal_token"] == INTERNAL_TOKEN then
     -- if it's an internal request, skip router and call the specified function directly
-    tmp.func_path = ngx.var.uri
+    run(ngx.var.uri, params)
 elseif string.sub(ngx.var.uri, 0, 8) == '/private' then
     -- also skip router if it's a private path (protected by nginx)
-    tmp.func_path = ngx.var.uri
+    run(ngx.var.uri, params)
 else
-    local ok, errmsg = R:execute(
+    local ok, errmsg = route:route(
        ngx.var.request_method,
        uri,
        ngx.req.get_uri_args(),  -- all these parameters
@@ -52,40 +83,3 @@ else
     end
 end
 
-if tmp.func_path == nil then return reject(404, {["error"] = "not found"}) end
-
-local ok, func = pcall(require, tmp.func_path)
-if not ok then
-    -- `func` will be the error message if error occured
-    ngx.log(ngx.ERR, func)
-    local status = nil
-    if string.find(func, "not found") then
-        status = 404
-    else
-        status = 500
-    end
-    if ENV == 'production' then
-        func = 'Internal Server Error'
-    end
-
-    return reject(status, {["error"] = func})
-end
-
-local ok, ret, err = pcall(func, tmp.params)
-
-if not ok then
-    -- unknown exception thown by error()
-    ngx.log(ngx.ERR, ret)
-    if ENV == 'production' then
-        ret = 'We\'re sorry, something went wrong'
-    end
-    return reject(500, {["error"] = ret})
-end
-
--- function returned the second result as error
-if err then
-    ngx.log(ngx.ERR, err)
-    return reject(400, {["error"] = err})
-end
-
-ngx.say(json.encode({data = ret}))
