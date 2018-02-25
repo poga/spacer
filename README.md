@@ -2,7 +2,9 @@
 
 A new way to build business around technology and to code. Includes:
 
-* fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
+* Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). You can write high-performance non-blocking functions with simple language.
+* Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
+* **Platform agnostic**: From a complex [Kubernetes](https://kubernetes.io/) clusters and [Apache Kafka](https://kafka.apache.org/) to the simplest setup (just a [PostgreSQL](https://www.postgresql.org/) database), spacer can be run on most platforms.
 
 ## Install
 
