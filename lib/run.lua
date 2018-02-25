@@ -1,6 +1,5 @@
 local json = require "cjson"
 local route = require "route"
-local context = require "context"
 
 local ENV = os.getenv('SPACER_ENV')
 local INTERNAL_TOKEN = require "internal_token"
@@ -72,19 +71,21 @@ if not ok then
     return reject(status, {["error"] = func})
 end
 
-local ok, ret = pcall(func, tmp.params, context)
+local ok, ret, err = pcall(func, tmp.params)
 
 if not ok then
-    if ret.t == "error" then -- user error
-        ngx.log(ngx.ERR, ret.err)
-        return reject(400, {["error"] = ret.err})
-    else -- unknown exception
-        ngx.log(ngx.ERR, ret)
-        if ENV == 'production' then
-            ret = 'We\'re sorry, something went wrong'
-        end
-        return reject(500, {["error"] = ret})
+    -- unknown exception thown by error()
+    ngx.log(ngx.ERR, ret)
+    if ENV == 'production' then
+        ret = 'We\'re sorry, something went wrong'
     end
+    return reject(500, {["error"] = ret})
+end
+
+-- function returned the second result as error
+if err then
+    ngx.log(ngx.ERR, err)
+    return reject(400, {["error"] = err})
 end
 
 ngx.say(json.encode({data = ret}))

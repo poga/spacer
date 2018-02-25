@@ -44,14 +44,14 @@ Functions in spacer are written in Lua, a simple dynamic langauge. Here's a hell
 
 ```lua
 -- app/hello.lua
-local G = function (params, context)
+local G = function (args)
     return "Hello from Spacer!"
 end
 
 return G
 ```
 
-Every function takes two arguments: `params` and `context`. For detail, check the **Functions** section.
+Every function takes one argument: `args`. For detail, check the **Functions** section.
 
 ### Test
 
@@ -76,14 +76,14 @@ There are 2 way to invoke a function. The first is the simplest: just call it li
 
 ```lua
 -- app/bar.lua
-local G = function (params, ctx)
+local G = function (args)
   return params.val + 42
 end
 
 -- app/foo.lua
 local bar = require "bar"
 
-local G = function (params, ctx)
+local G = function (args)
   return 100 + bar({val = 1}) -- returns 143
 end
 ```
@@ -93,7 +93,7 @@ The second way is use `flow.call`, which emulate a http request between two func
 ```lua
 local flow = require "flow"
 
-local G = function (params, ctx)
+local G = function (args)
   return flow.call("bar", {val = 1}) -- returns 143
 end
 ```
@@ -102,24 +102,24 @@ It's called **flow** since the primary usage of it is to trace the flow between 
 
 #### Error handling
 
-There are two kind of error in spacer: **error** and **Fatal**.
-
-An **error** is corresponding to http 4xx status code: something went wrong on the caller side. To return an error, just call `ctx.error`.
+An **error** is corresponding to http 4xx status code: something went wrong on the caller side. In this case, return the error as the second returned value
 
 ```lua
-local G = function (params, ctx)
-  ctx.error("Invalid Password")
+local G = function (args)
+  return nil, "invalid password"
 end
 ```
 
-A **fatal** is corresponding too http 5xx status code: the function itself goes wrong (and it's not recoverable). call `ctx.fatal` to return a fatal.
+If an unexpected exception happepend, use the `error()` function to return it. Spacer will return the error with http 500 status code.
+
 ```lua
-local G = function (params, ctx)
-  ctx.fatal("DB not available")
+local G = function (args)
+  local conn = db.connect()
+  if conn == nil then
+    error("unable to connect to DB")
+  end
 end
 ```
-
-All uncaught exceptions are **fatal**.
 
 ## Event, Trigger, and Kappa Architecture
 
@@ -136,7 +136,7 @@ To emit a event, use the built-in `topics` library.
 ```lua
 local topics = require "topics"
 
-local G = function (params, ctx)
+local G = function (args)
   topics.append("EVENT_NAME", { [EVENT_KEY] = EVENT_PAYLOAD })
 end
 
