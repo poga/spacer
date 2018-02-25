@@ -72,7 +72,9 @@ See `test/test_hello.lua` for example.
 
 Code in spacer are organized by functions. For now, spacer only support [Lua](https://www.lua.org/) as the programming language.
 
-There are 2 way to invoke a function. The first is the simplest: just call it like a normal lua function.
+Functions are the main abstraction in spacer. Functions are composed together to build a complex application.
+
+There are 2 way to invoke other functions from a function. The first is the simplest: just call it like a normal lua function.
 
 ```lua
 -- app/bar.lua
@@ -100,9 +102,37 @@ end
 
 It's called **flow** since the primary usage of it is to trace the flow between functions.
 
+### Exposing Functions to the Public
+
+Functions are exposed to the public through a gateway. You can define gateway in `gateway.lua`.
+
+```lua
+local _R = {
+    -- HTTP Method, Path, Function Name
+    {"GET", "/hello", "hello"},
+
+    -- users resources
+    {"GET", "/users", "controllers/users/get"},
+    {"PUT", "/users/:id", "controllers/users/put"},
+
+    -- teams resources
+    {"POST", "/teams", "create_teams"},
+    {"GET", "/teams/:id", "get_team"},
+    {"PUT", "/teams/:id", "put_team"},
+    {"DELETE", "/teams/:id", "delete_team"},
+
+    -- registration
+    {"POST", "/register", "controllers/users/create"}
+}
+
+return _R
+```
+
+When invoking a function via HTTP request, query params, route params, and post body(json) are all grouped into an **args** table and passed to the function.
+
 #### Error handling
 
-An **error** is corresponding to http 4xx status code: something went wrong on the caller side. In this case, return the error as the second returned value
+An **error** is corresponding to HTTP 4xx status code: something went wrong on the caller side. In this case, return the error as the second returned value
 
 ```lua
 local G = function (args)
@@ -110,7 +140,7 @@ local G = function (args)
 end
 ```
 
-If an unexpected exception happepend, use the `error()` function to return it. Spacer will return the error with http 500 status code.
+If an unexpected exception happepend, use the `error()` function to return it. Spacer will return the error with HTTP 500 status code.
 
 ```lua
 local G = function (args)
