@@ -6,7 +6,7 @@ Spacer is a serverless function platform. It's a new way to build business aroun
 
 * Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). Write high-performance non-blocking functions in simple, dynamic language.
 * Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
-* **Platform agnostic**: From complex [Kubernetes](https://kubernetes.io/) clusters and [Apache Kafka](https://kafka.apache.org/) to the simplest setup (just a [PostgreSQL](https://www.postgresql.org/) database), spacer can run on most platforms.
+* **Platform agnostic**: From a simple [PostgreSQL](https://www.postgresql.org/) database to a complex [Kubernetes](https://kubernetes.io/) clusters with [Apache Kafka](https://kafka.apache.org/). Spacer can run on most platforms.
 
 ## Synopsis
 
