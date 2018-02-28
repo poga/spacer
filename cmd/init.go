@@ -39,47 +39,16 @@ var initCmd = &cobra.Command{
 
 			func() error { return os.Mkdir(filepath.Join(targetDir, "config"), os.ModePerm) },
 			func() error {
-				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.development.conf"), "config/nginx.conf", nginxConfigTmpl{true})
-			},
-			func() error {
-				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.production.conf"), "config/nginx.conf", nginxConfigTmpl{false})
-			},
-			func() error {
-				return writeFromTemplate(filepath.Join(targetDir, "config", "nginx.test.conf"), "config/nginx.conf", nginxConfigTmpl{false})
-			},
-			func() error {
 				return writeFromTemplate(
-					filepath.Join(targetDir, "config", "env.development.yml"),
-					"config/env.yml",
-					envConfigTmpl{
+					filepath.Join(targetDir, "config", "application.yml"),
+					"config/application.yml",
+					configTmpl{
 						"postgres",
 						"postgres://localhost/spacer_development?sslmode=disable",
 					},
 				)
 			},
-			func() error {
-				return writeFromTemplate(
-					filepath.Join(targetDir, "config", "env.production.yml"),
-					"config/env.yml",
-					envConfigTmpl{
-						"postgres",
-						"postgres://localhost/spacer_production",
-					},
-				)
-			},
-			func() error {
-				return writeFromTemplate(
-					filepath.Join(targetDir, "config", "env.test.yml"),
-					"config/env.yml",
-					envConfigTmpl{
-						"postgres",
-						"postgres://localhost/spacer_test?sslmode=disable",
-					},
-				)
-			},
-			func() error {
-				return writeFile(filepath.Join(targetDir, "config", "application.yml"), "config/application.yml")
-			},
+			func() error { return writeFile(filepath.Join(targetDir, "config", "nginx.conf"), "config/nginx.conf") },
 			func() error { return writeFile(filepath.Join(targetDir, ".gitignore"), "appignore") },
 			func() error { return writeFile(filepath.Join(targetDir, "Dockerfile"), "Dockerfile") },
 			func() error { return os.Mkdir(filepath.Join(targetDir, "logs"), os.ModePerm) },
@@ -114,7 +83,7 @@ type nginxConfigTmpl struct {
 	NoCache bool
 }
 
-type envConfigTmpl struct {
+type configTmpl struct {
 	DefaultDriver     string
 	DefaultConnString string
 }

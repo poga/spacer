@@ -7,133 +7,45 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
-
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 )
 
-const CONFIG_VERSION = 1
-
-type ApplicationConfig struct {
-	SpacerVersion int                            `yaml:"spacerVersion"`
-	AppName       string                         `yaml:"appName"`
-	Topics        []string                       `yaml:"topics"`
-	Events        map[string]map[string][]string `yaml:"events"`
-
-	ConsumerGroupID string
-}
-
-type EnvConfig struct {
-	LogStorage struct {
-		Driver string `yaml:"driver"`
-
-		// pg
-		ConnString string `yaml:"connString"`
-
-		// kafka
-		Brokers []string `yaml:"brokers"`
-	} `yaml:"logStorage"`
-
-	Delegator        string `yaml:"delegator"`
-	WriteProxyListen string `yaml:"writeProxyListen"`
-}
-
 type Application struct {
-	appConfig       *ApplicationConfig
-	envConfig       *EnvConfig
+	config          *Config
 	Log             *log.Entry
 	Triggers        map[Event][]*url.URL
 	WorkerPool      *Pool
 	ConsumerGroupID string
+	Env             string
 }
 
 type Event string
 
-func NewApplicationConfig(file string) (*ApplicationConfig, error) {
-	configData, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	config := ApplicationConfig{}
-	err = yaml.Unmarshal(configData, &config)
-	if err != nil {
-		return nil, err
+func NewApplication(configFile string, env string) (*Application, error) {
+	if env == "" {
+		return nil, fmt.Errorf("Invalid Environment: %s", env)
 	}
 
-	// defaults
-	if config.ConsumerGroupID == "" {
-		config.ConsumerGroupID = "spacer-$appName"
-	}
-	log.Debugf("environment config: %v", config)
-
-	// validation
-	if config.SpacerVersion != CONFIG_VERSION {
-		return nil, fmt.Errorf("Expect config version %d, got %d", CONFIG_VERSION, config.SpacerVersion)
-	}
-	if strings.Contains(config.AppName, "_") {
-		return nil, fmt.Errorf("appName %s cannot contains \"_\"", config.AppName)
-	}
-
-	return &config, nil
-}
-
-func NewEnvConfig(file string) (*EnvConfig, error) {
-	configData, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	config := EnvConfig{}
-	err = yaml.Unmarshal(configData, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	// defaults
-	if config.Delegator == "" {
-		config.Delegator = "http://localhost:3000"
-	}
-	if config.WriteProxyListen == "" {
-		config.WriteProxyListen = ":9065"
-	}
-	log.Debugf("application config: %v", config)
-
-	return &config, nil
-}
-
-func NewApplication(projectPath string, env string, envConfigName string) (*Application, error) {
-	appConfig, err := NewApplicationConfig(filepath.Join(projectPath, "config", "application.yml"))
-	if err != nil {
-		return nil, err
-	}
-
-	var envConfigPath = ""
-	if envConfigName == "" {
-		envConfigPath = filepath.Join(projectPath, "config", fmt.Sprintf("env.%s.yml", env))
-	} else {
-		envConfigPath = filepath.Join(projectPath, "config", envConfigName)
-	}
-
-	envConfig, err := NewEnvConfig(envConfigPath)
+	config, err := NewProjectConfig(configFile)
 	if err != nil {
 		return nil, err
 	}
 
 	triggers := make(map[Event][]*url.URL)
 
-	for topic, handlers := range appConfig.Events {
-		for eventName, functions := range handlers {
-			event := normalizeEventName(topic, eventName)
+	for topic, triggerNameAndFunctions := range config.GetStringMap("events") {
+		for triggerName, functions := range triggerNameAndFunctions.(map[string][]string) {
+			event := normalizeEventName(topic, triggerName)
 			if _, ok := triggers[event]; !ok {
 				triggers[event] = make([]*url.URL, 0)
 			}
 
 			for _, functionName := range functions {
-				url, err := url.Parse(fmt.Sprintf("%s/%s", envConfig.Delegator, functionName))
+				url, err := url.Parse(fmt.Sprintf("%s/%s", config.GetString("functionInvoker"), functionName))
 				if err != nil {
 					return nil, err
 				}
@@ -142,28 +54,44 @@ func NewApplication(projectPath string, env string, envConfigName string) (*Appl
 			}
 		}
 	}
-	logger := log.WithFields(log.Fields{"appName": appConfig.AppName})
-	consumerGroupID := strings.Replace(appConfig.ConsumerGroupID, "$appName", appConfig.AppName, -1)
-	app := &Application{appConfig, envConfig, logger, triggers, nil, consumerGroupID}
+	logger := log.WithFields(log.Fields{"appName": config.GetString("appName")})
+	consumerGroupID := strings.Replace(config.GetString("consumerGroup"), "$appName", config.GetString("appName"), -1)
+	app := &Application{config, logger, triggers, nil, consumerGroupID, env}
 	app.WorkerPool = NewPool(app.InvokeFunc)
 
 	return app, nil
 }
 
+func (app *Application) EnvVar() []string {
+	return app.config.GetStringSlice("envVar")
+}
+
+func (app *Application) ConnString() string {
+	return app.config.GetString(fmt.Sprintf("logStorage.%s.connString", app.Env))
+}
+
+func (app *Application) Topics() []string {
+	return app.config.GetStringSlice("topics")
+}
+
 func (app *Application) Brokers() []string {
-	return app.envConfig.LogStorage.Brokers
+	return app.config.GetStringSlice(fmt.Sprintf("logStorage.%s.brokers", app.Env))
 }
 
 func (app *Application) LogStorageDriver() string {
-	return app.envConfig.LogStorage.Driver
+	return app.config.GetString(fmt.Sprintf("logStorage.%s.driver", app.Env))
 }
 
 func (app *Application) Name() string {
-	return app.appConfig.AppName
+	return app.config.GetString("appName")
 }
 
-func (app *Application) Delegator() string {
-	return app.envConfig.Delegator
+func (app *Application) FunctionInvoker() string {
+	return app.config.GetString("functionInvoker")
+}
+
+func (app *Application) WriteProxyListen() string {
+	return app.config.GetString("writeProxyListen")
 }
 
 func (app *Application) Invoke(msg Message) {
@@ -252,8 +180,8 @@ func (app *Application) Start(readyChan chan int, withWriteProxy bool) error {
 		if err != nil {
 			app.Log.Fatal(err)
 		}
-		go http.ListenAndServe(app.envConfig.WriteProxyListen, writeProxy)
-		app.Log.WithField("listen", app.envConfig.WriteProxyListen).Infof("Write Proxy Started")
+		go http.ListenAndServe(app.WriteProxyListen(), writeProxy)
+		app.Log.WithField("listen", app.WriteProxyListen()).Infof("Write Proxy Started")
 	}
 
 	app.Log.WithField("groupID", app.ConsumerGroupID).Infof("Consumer Started")
@@ -280,7 +208,7 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 	var consumer LogStorageConsumer
 	var err error
 
-	driver := app.envConfig.LogStorage.Driver
+	driver := app.LogStorageDriver()
 	app.Log.Infof("Starting Log Storage with driver %s", driver)
 
 	switch driver {
@@ -312,7 +240,7 @@ func (app *Application) createProducerAndConsumer() (LogStorageProducer, LogStor
 		return nil, nil, fmt.Errorf("Unknown Log Storage driver %s", driver)
 	}
 
-	err = producer.CreateTopics(app.appConfig.Topics)
+	err = producer.CreateTopics(app.Topics())
 	if err != nil {
 		return nil, nil, err
 	}

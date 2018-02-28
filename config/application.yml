@@ -1,6 +1,9 @@
 spacerVersion: 1
 
-appName: SpacerHelloWorld
+##############
+# Application
+
+appName: SpacerApplication
 
 topics:
   # list the topics your application going to use
@@ -16,7 +19,39 @@ events:
   #     APPEND:
   #       - handler1
   #       - handler2
-  #
 
-# consumerGroupID: spacer-$appName
+envVar:
+  # list the environment variables you need here
+  #
+  # DO NOT REMOVE SPACER_ENV AND SPACER_INTERNAL_TOKEN
+  - SPACER_ENV
+  - SPACER_INTERNAL_TOKEN
+
+
+##############
+# Log Storage (Kafka or PostgreSQL)
+
+logStorage:
+  development:
+    # for kafka driver
+    # driver: kafka
+    # brokers:
+    # - localhost:9092
+
+    # for postgres driver
+    driver: {{.DefaultDriver}}
+    connString: {{.DefaultConnString}}
+  production:
+    driver: {{.DefaultDriver}}
+    connString: {{.DefaultConnString}}
+
+
+##############
+# Spacer
+
+# consumerGroup: spacer-$appName
+
+# functionInvoker: http://localhost:3000
+
+# writeProxyListen: :9065
 

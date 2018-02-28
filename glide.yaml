@@ -18,4 +18,5 @@ import:
   subpackages:
   - '...'
 - package: github.com/lib/pq
-- package: github.com/go-yaml/yaml
+- package: github.com/spf13/viper
+  version: ~1.0.0
