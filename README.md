@@ -4,9 +4,51 @@
 
 Spacer is a serverless function platform. It's a new way to build business around technology and to code.
 
-* Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). You can write high-performance non-blocking functions with simple language.
+* Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). Write high-performance non-blocking functions in simple, dynamic language.
 * Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
-* **Platform agnostic**: From complex [Kubernetes](https://kubernetes.io/) clusters and [Apache Kafka](https://kafka.apache.org/) to the simplest setup (just a [PostgreSQL](https://www.postgresql.org/) database), spacer can be run on most platforms.
+* **Platform agnostic**: From complex [Kubernetes](https://kubernetes.io/) clusters and [Apache Kafka](https://kafka.apache.org/) to the simplest setup (just a [PostgreSQL](https://www.postgresql.org/) database), spacer can run on most platforms.
+
+## Synopsis
+
+Here's the minimum code required for a spacer project.
+
+You write a function:
+
+```lua
+-- app/hello.lua
+local G = function (args)
+    return "Hello from Spacer!"
+end
+
+return G
+```
+
+...and define how to expose it to the internet:
+
+```lua
+-- app/gateway.lua
+local R = {
+    -- HTTP Method, Path, Function Name
+    {"GET", "/hello", "hello"}
+}
+
+return R
+```
+
+...then start the project.
+
+```
+$ ./bin/dev.sh
+```
+
+Test the function.
+
+```
+$ curl localhost:3000/hello
+{"data":"Hello from Spacer!"}
+```
+
+That's it!
 
 ## Install
 
