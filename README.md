@@ -10,7 +10,7 @@ Spacer is a serverless function platform. It's a new way to build business aroun
 
 ## Synopsis
 
-Here's the minimum code required for a spacer project.
+Here's a minimal spacer project.
 
 You write a function:
 
