@@ -1,2 +1,5 @@
-/temp/*
-/logs
+temp/*
+logs
+
+config/nginx.development.conf
+config/nginx.production.conf
