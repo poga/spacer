@@ -2,7 +2,9 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
 
-Spacer is a serverless function platform. It's a new way to build business around technology and to code.
+Build your project with reusable, observable functions. Pay exactly what you've used.
+
+It's a new way to build business around technology and to code.
 
 * Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). Write high-performance non-blocking functions in simple, dynamic language.
 * Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
