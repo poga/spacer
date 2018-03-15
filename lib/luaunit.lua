@@ -1,4 +1,18 @@
 --[[
+This software is distributed under the BSD License.
+
+Copyright (c) 2005-2018, Philippe Fremy <phil at freehackers dot org>
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+]]--
+--[[
         luaunit.lua
 
 Description: A unit testing framework
@@ -267,7 +281,7 @@ M.private.strMatch = strMatch
 local function patternFilter(patterns, expr)
     -- Run `expr` through the inclusion and exclusion rules defined in patterns
     -- and return true if expr shall be included, false for excluded.
-    -- Inclusion pattern are defined as normal patterns, exclusions 
+    -- Inclusion pattern are defined as normal patterns, exclusions
     -- patterns start with `!` and are followed by a normal pattern
 
     -- result: nil = UNKNOWN (not matched yet), true = ACCEPT, false = REJECT
@@ -476,7 +490,7 @@ M.prettystr = prettystr
 
 local function tryMismatchFormatting( table_a, table_b, doDeepAnalysis )
     --[[
-    Prepares a nice error message when comparing tables, performing a deeper 
+    Prepares a nice error message when comparing tables, performing a deeper
     analysis.
 
     Arguments:
@@ -487,7 +501,7 @@ local function tryMismatchFormatting( table_a, table_b, doDeepAnalysis )
         M.DISABLE_DEEP_ANALYSIS: never perform deep analysis
 
     Returns: {success, result}
-    * success: false if deep analysis could not be performed 
+    * success: false if deep analysis could not be performed
                in this case, just use standard assertion message
     * result: if success is true, a multi-line string with deep analysis of the two lists
     ]]
@@ -550,11 +564,11 @@ end
 
 local function mismatchFormattingMapping( table_a, table_b, doDeepAnalysis )
     --[[
-    Prepares a nice error message when comparing tables which are not pure lists, performing a deeper 
+    Prepares a nice error message when comparing tables which are not pure lists, performing a deeper
     analysis.
 
     Returns: {success, result}
-    * success: false if deep analysis could not be performed 
+    * success: false if deep analysis could not be performed
                in this case, just use standard assertion message
     * result: if success is true, a multi-line string with deep analysis of the two lists
     ]]
@@ -574,7 +588,7 @@ local function mismatchFormattingMapping( table_a, table_b, doDeepAnalysis )
     for k,v in pairs( table_a ) do
         if is_equal( v, table_b[k] ) then
             table.insert( keysCommon, k )
-        else 
+        else
             if table_b[k] == nil then
                 table.insert( keysOnlyTa, k )
             else
@@ -622,7 +636,7 @@ local function mismatchFormattingMapping( table_a, table_b, doDeepAnalysis )
             end
         end
 
-        extendWithStrFmt( result, 'Table A has %d keys not present in table B and table B has %d keys not present in table A', #keysOnlyTa, #keysOnlyTb ) 
+        extendWithStrFmt( result, 'Table A has %d keys not present in table B and table B has %d keys not present in table A', #keysOnlyTa, #keysOnlyTb )
     end
 
     local function keytostring(k)
@@ -638,7 +652,7 @@ local function mismatchFormattingMapping( table_a, table_b, doDeepAnalysis )
             extendWithStrFmt( result, '  - A[%s]: %s', keytostring(v), prettystr(table_a[v]) )
             extendWithStrFmt( result, '  + B[%s]: %s', keytostring(v), prettystr(table_b[v]) )
         end
-    end    
+    end
 
     if #keysOnlyTa ~= 0 then
         table.insert( result, 'Items only in table A:' )
@@ -659,7 +673,7 @@ local function mismatchFormattingMapping( table_a, table_b, doDeepAnalysis )
         for k,v in sortedPairs( keysCommon ) do
             extendWithStrFmt( result, '  = A and B [%s]: %s', keytostring(v), prettystr(table_a[v]) )
         end
-    end    
+    end
 
     return true, table.concat( result, '\n')
     ]]
@@ -668,11 +682,11 @@ M.private.mismatchFormattingMapping = mismatchFormattingMapping
 
 local function mismatchFormattingPureList( table_a, table_b )
     --[[
-    Prepares a nice error message when comparing tables which are lists, performing a deeper 
+    Prepares a nice error message when comparing tables which are lists, performing a deeper
     analysis.
 
     Returns: {success, result}
-    * success: false if deep analysis could not be performed 
+    * success: false if deep analysis could not be performed
                in this case, just use standard assertion message
     * result: if success is true, a multi-line string with deep analysis of the two lists
     ]]
@@ -702,15 +716,15 @@ local function mismatchFormattingPureList( table_a, table_b )
     end
 
 
-    table.insert( result, 'List difference analysis:' )    
+    table.insert( result, 'List difference analysis:' )
     if len_a == len_b then
         -- TODO: handle expected/actual naming
         extendWithStrFmt( result, '* lists %sA (%s) and %sB (%s) have the same size', refa, descrTa, refb, descrTb )
-    else 
+    else
         extendWithStrFmt( result, '* list sizes differ: list %sA (%s) has %d items, list %sB (%s) has %d items', refa, descrTa, len_a, refb, descrTb, len_b )
     end
 
-    extendWithStrFmt( result, '* lists A and B start differing at index %d', commonUntil+1 ) 
+    extendWithStrFmt( result, '* lists A and B start differing at index %d', commonUntil+1 )
     if commonBackTo >= 0 then
         if deltalv > 0 then
             extendWithStrFmt( result, '* lists A and B are equal again from index %d for A, %d for B', len_a-commonBackTo, len_b-commonBackTo )
@@ -855,7 +869,7 @@ local function _table_tostring( tbl, indentLevel, printTableRefs, recursionTable
                 entry = keytostring(k) .. "="
             end
 
-            -- value part 
+            -- value part
             if recursionTable[v] then
                 -- recursion in the value detected!
                 recursionTable.recursionDetected = true
@@ -882,7 +896,7 @@ M.private._table_tostring_format_multiline_string = _table_tostring_format_multi
 
 
 local function _table_tostring_format_result( tbl, result, indentLevel, printTableRefs )
-    -- final function called in _table_to_string() to format the resulting list of 
+    -- final function called in _table_to_string() to format the resulting list of
     -- string describing the table.
 
     local dispOnMultLines = false
@@ -911,12 +925,12 @@ local function _table_tostring_format_result( tbl, result, indentLevel, printTab
     -- now reformat the result table (currently holding element strings)
     if dispOnMultLines then
         local indentString = string.rep("    ", indentLevel - 1)
-        result = {  
-                    "{\n    ", 
+        result = {
+                    "{\n    ",
                     indentString,
-                    table.concat(result, ",\n    " .. indentString), 
+                    table.concat(result, ",\n    " .. indentString),
                     "\n",
-                    indentString, 
+                    indentString,
                     "}"
                 }
     else
@@ -1145,7 +1159,7 @@ local function errorMsgEquality(actual, expected, doDeepAnalysis)
         -- extend with mismatch analysis if possible:
         local success, mismatchResult
         success, mismatchResult = tryMismatchFormatting( actual, expected, doDeepAnalysis )
-        if success then 
+        if success then
             result = table.concat( { result, mismatchResult }, '\n' )
         end
         return result
@@ -1209,7 +1223,7 @@ function M.assertAlmostEquals( actual, expected, margin )
         if not M.ORDER_ACTUAL_EXPECTED then
             expected, actual = actual, expected
         end
-        local delta = math.abs(actual - expected) 
+        local delta = math.abs(actual - expected)
         fail_fmt(2, 'Values are not almost equal\n' ..
                     'Actual: %s, expected: %s, delta %s above margin of %s',
                     actual, expected, delta, margin)
