@@ -257,8 +257,10 @@ $ go install  // if you want to put it into your path
 
 ## License
 
-* `lib/luaunit.lua`: BSD License, Philippe Fremy
-* `lib/uuid.lua`: MIT, Thibault Charbonnier
-* `lib/router.lua`: MIT
+* `lib/luaunit.lua`: BSD. [https://github.com/bluebird75/luaunit](https://github.com/bluebird75/luaunit)
+* `lib/uuid.lua`: MIT. [https://github.com/thibaultcha/lua-resty-jit-uuid](https://github.com/thibaultcha/lua-resty-jit-uuid)
+* `lib/router.lua`: MIT. [https://github.com/APItools/router.lua](https://github.com/APItools/router.lua)
+* `lib/resty/hmac.lua`: BSD. [https://github.com/jkeys089/lua-resty-hmac](https://github.com/jkeys089/lua-resty-hmac)
+* `lib/resty/eve.lua, lib/resty/jwt-validators.lua, lib/resty/jwt.lua`: Apache License. [https://github.com/SkyLothar/lua-resty-jwt](https://github.com/SkyLothar/lua-resty-jwt)
 * Everything else: [MIT](./LICENSE)
 
