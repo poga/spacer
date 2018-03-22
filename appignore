@@ -3,3 +3,5 @@ logs
 
 config/nginx.development.conf
 config/nginx.production.conf
+
+bin/flamegraph.html

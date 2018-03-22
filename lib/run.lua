@@ -1,6 +1,9 @@
 local json = require "cjson"
-local route = require "route"
+local make_router = require "make_router"
 local reject = require "reject"
+local gateway_config = require "gateway"
+
+local router = make_router(gateway_config)
 
 local ENV = os.getenv("SPACER_ENV")
 local INTERNAL_TOKEN = require "internal_token"
@@ -45,7 +48,7 @@ local run = function (func_path, params)
     ngx.say(json.encode({data = ret}))
 end
 
-route.handler = function (func_path, params)
+router.handler = function (func_path, params)
     run(func_path, params)
 end
 
@@ -72,7 +75,7 @@ elseif string.sub(ngx.var.uri, 0, 8) == '/private' then
     -- also skip router if it's a private path (protected by nginx)
     run(ngx.var.uri, params)
 else
-    local ok, errmsg = route:route(
+    local ok, errmsg = router:route(
        ngx.var.request_method,
        uri,
        ngx.req.get_uri_args(),  -- all these parameters
