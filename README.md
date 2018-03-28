@@ -1,8 +1,6 @@
-# Spacer
+![](./github_assets/logo.png)
 
-<div align="right">
-  <img src="./github_assets/logo.png" />
-</div>
+# Spacer
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
 
