@@ -4,7 +4,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
 
-Build your backend with reusable, observable functions. Pay for exactly what you've used.
+Serverless function platform for Lua
 
 ## Features
 
