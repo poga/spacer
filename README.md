@@ -1,12 +1,20 @@
-# Spacer
+<h1 align="center">Spacer</h1>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
+<div align="center">
+  <img src="./github_assets/logo.png" />
+</div>
 
-Build your project with reusable, observable functions. Pay exactly what you've used.
+<div align="center">
+  [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
+</div>
 
-It's a new way to build business around technology and to code.
+<div align="center">
+  Build your backend with reusable, observable functions. Pay for exactly what you've used.
+</div>
 
-* Based on [nginx](https://nginx.org) and [LuaJIT](http://luajit.org/). Write high-performance non-blocking functions in simple, dynamic language.
+## Features
+
+* High-performance **non-blocking** functions.
 * Fast **edit-save-reload** development cycle: No redeployment or rebuilding image is needed.
 * **Platform agnostic**: From a simple [PostgreSQL](https://www.postgresql.org/) database to a complex [Kubernetes](https://kubernetes.io/) clusters with [Apache Kafka](https://kafka.apache.org/). Spacer can run on most platforms.
 
