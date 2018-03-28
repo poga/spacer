@@ -1,16 +1,12 @@
-<h1 align="center">Spacer</h1>
+# Spacer
 
-<div align="center">
+<div align="right">
   <img src="./github_assets/logo.png" />
 </div>
 
-<div align="center">
-  [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
-</div>
+[![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
 
-<div align="center">
-  Build your backend with reusable, observable functions. Pay for exactly what you've used.
-</div>
+Build your backend with reusable, observable functions. Pay for exactly what you've used.
 
 ## Features
 
