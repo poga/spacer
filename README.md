@@ -2,6 +2,7 @@
 
 # Spacer
 
+![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square)
 [![Go Report Card](https://goreportcard.com/badge/github.com/poga/spacer)](https://goreportcard.com/report/github.com/poga/spacer)
 
 Serverless function platform for Lua
