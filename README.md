@@ -57,6 +57,10 @@ That's it!
 
 ## Install
 
+The easiest way would be using the provided [Dockerfile](./Dockerfile).
+
+To install from source:
+
 1. Install Dependencies
 
 * [OpenResty](https://openresty.org/)

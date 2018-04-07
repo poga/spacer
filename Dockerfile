@@ -72,4 +72,5 @@ WORKDIR /spacer
 
 COPY . .
 
-CMD ["./bin/prod.sh"]
+# for development
+CMD ["./bin/dev.sh"]
