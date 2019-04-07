@@ -1,7 +1,5 @@
 ![](./github_assets/logo.png)
 
-**note: We're redesigning Spacer after received feedback from users. current implementation is considered deprecated.**
-
 # Spacer
 
 ![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
